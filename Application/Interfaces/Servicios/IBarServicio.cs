@@ -40,5 +40,9 @@ namespace MusicBares.Application.Interfaces.Servicios
         /// No borra registros físicamente.
         /// </summary>
         Task<BarRespuestaDto> EliminarAsync(int idBar);
+
+        Task<BarRespuestaDto> ReactivarAsync(int idBar);
+
+
     }
 }

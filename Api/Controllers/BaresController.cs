@@ -136,6 +136,24 @@ namespace MusicBares.API.Controllers
             }
         }
 
+        [HttpPatch("reactivar/{idBar}")]
+        public async Task<IActionResult> Reactivar(int idBar)
+        {
+            try
+            {
+                var resultado = await _barServicio.ReactivarAsync(idBar);
+
+                return Ok(resultado);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { mensaje = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { mensaje = ex.Message });
+            }
+        }
 
     }
 }

@@ -234,6 +234,39 @@ namespace MusicBares.Application.Servicios
             };
         }
 
+        public async Task<BarRespuestaDto> ReactivarAsync(int idBar)
+        {
+            // Validación básica del id
+            if (idBar <= 0)
+                throw new ArgumentException("El id del bar es inválido");
+
+            // Buscar el bar en BD
+            var bar = await _barRepositorio.ObtenerPorIdAsync(idBar);
+
+            if (bar == null)
+                throw new Exception("El bar no existe");
+
+            // Si ya está activo, no hacemos nada
+            if (bar.Estado)
+                throw new Exception("El bar ya se encuentra activo");
+
+            // Reactivar el bar
+            bar.Estado = true;
+
+            // Usamos el método de actualización existente
+            var actualizado = await _barRepositorio.ActualizarAsync(bar);
+
+            if (!actualizado)
+                throw new Exception("No fue posible reactivar el bar");
+
+            // Respuesta estándar del sistema
+            return new BarRespuestaDto
+            {
+                Exitoso = true,
+                Mensaje = "Bar reactivado correctamente"
+            };
+        }
+
     }
 }
 
