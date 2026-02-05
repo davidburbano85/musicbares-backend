@@ -25,4 +25,7 @@ public interface IBarRepositorio
     // Lista todos los bares activos del sistema
     // Puede usarse para administración general
     Task<IEnumerable<Bar>> ListarAsync();
+
+    Task<bool> EliminarAsync(int idBar);
+
 }
