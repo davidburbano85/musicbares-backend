@@ -124,15 +124,18 @@ namespace MusicBares.API.Controllers
             {
                 var resultado = await _barServicio.EliminarAsync(idBar);
 
-                if (!resultado.Exitoso)
-                    return BadRequest(resultado);
-
                 return Ok(resultado);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { mensaje = ex.Message });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error interno al eliminar el bar: {ex.Message}");
+                return StatusCode(500, new { mensaje = ex.Message });
             }
         }
+
+
     }
 }

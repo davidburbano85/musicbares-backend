@@ -122,5 +122,25 @@ namespace MusicBares.Infrastructure.Repositories
 
             return filas > 0;
         }
+
+        public async Task<bool> EliminarAsync(int idBar)
+        {
+            using var conexion = _fabricaConexion.CrearConexion();
+
+            string sql = @"
+                UPDATE bar
+                SET estado = false
+                WHERE id_bar = @idBar;
+                ";
+
+            var filasAfectadas = await conexion.ExecuteAsync(sql, new { idBar });
+
+            // Si actualizó al menos una fila, significa que el bar existía
+            return filasAfectadas > 0;
+        }
+
+
+
+
     }
 }

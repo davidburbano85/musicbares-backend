@@ -210,45 +210,30 @@ namespace MusicBares.Application.Servicios
         /// </summary>
         public async Task<BarRespuestaDto> EliminarAsync(int idBar)
         {
-            try
+            // Validación básica
+            if (idBar <= 0)
+                throw new ArgumentException("El id del bar es inválido");
+
+            // Verificamos si el bar existe
+            var bar = await _barRepositorio.ObtenerPorIdAsync(idBar);
+
+            if (bar == null)
+                throw new Exception("El bar no existe");
+
+            // Ejecutamos eliminación lógica
+            var eliminado = await _barRepositorio.EliminarAsync(idBar);
+
+            if (!eliminado)
+                throw new Exception("No fue posible eliminar el bar");
+
+            // Respuesta estándar del sistema
+            return new BarRespuestaDto
             {
-                // Verificar existencia
-                var bar = await _barRepositorio.ObtenerPorIdAsync(idBar);
-
-                if (bar == null)
-                    return new BarRespuestaDto
-                    {
-                        Exitoso = false,
-                        Mensaje = "El bar no existe"
-                    };
-
-                // Soft delete
-                bar.Estado = false;
-
-                var eliminado = await _barRepositorio.ActualizarAsync(bar);
-
-                if (!eliminado)
-                    return new BarRespuestaDto
-                    {
-                        Exitoso = false,
-                        Mensaje = "No se pudo eliminar el bar"
-                    };
-
-                return new BarRespuestaDto
-                {
-                    Exitoso = true,
-                    Mensaje = "Bar eliminado correctamente"
-                };
-            }
-            catch (Exception ex)
-            {
-                return new BarRespuestaDto
-                {
-                    Exitoso = false,
-                    Mensaje = $"Error al eliminar el bar: {ex.Message}"
-                };
-            }
+                Exitoso = true,
+                Mensaje = "Bar eliminado correctamente"
+            };
         }
+
     }
 }
 
