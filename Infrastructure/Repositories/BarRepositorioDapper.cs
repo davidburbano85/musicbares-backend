@@ -140,21 +140,38 @@ namespace MusicBares.Infrastructure.Repositories
             return filasAfectadas > 0;
         }
 
+        //public async Task<bool> ReactivarAsync(int idBar)
+        //{
+        //    using var conexion = _fabricaConexion.CrearConexion();
+
+        //    string sql = @"
+        //        UPDATE bar
+        //        SET estado = TRUE
+        //        WHERE id_bar = @idBar
+        //    ";
+
+        //    var filas = await conexion.ExecuteAsync(sql, new { idBar });
+
+        //    return filas > 0;
+        //}
+
         public async Task<bool> ReactivarAsync(int idBar)
         {
             using var conexion = _fabricaConexion.CrearConexion();
 
             string sql = @"
-                UPDATE bar
-                SET estado = TRUE
-                WHERE id_bar = @idBar
-            ";
+        UPDATE bar
+        SET estado = TRUE
+        WHERE id_bar = @idBar
+    ";
 
             var filas = await conexion.ExecuteAsync(sql, new { idBar });
 
+            // 🔥 LOG PARA SABER SI REALMENTE SE ACTUALIZA
+            Console.WriteLine($"Filas afectadas Reactivar: {filas}");
+
             return filas > 0;
         }
-
 
 
 
