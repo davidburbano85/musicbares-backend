@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using MusicBares.Application.Interfaces.Repositories;
+using MusicBares.DTOs.Bar;
 using MusicBares.Entidades;
 using MusicBares.Infrastructure.Conexion;
 
@@ -138,6 +139,22 @@ namespace MusicBares.Infrastructure.Repositories
             // Si actualizó al menos una fila, significa que el bar existía
             return filasAfectadas > 0;
         }
+
+        public async Task<bool> ReactivarAsync(int idBar)
+        {
+            using var conexion = _fabricaConexion.CrearConexion();
+
+            string sql = @"
+                UPDATE bar
+                SET estado = TRUE
+                WHERE id_bar = @idBar
+            ";
+
+            var filas = await conexion.ExecuteAsync(sql, new { idBar });
+
+            return filas > 0;
+        }
+
 
 
 

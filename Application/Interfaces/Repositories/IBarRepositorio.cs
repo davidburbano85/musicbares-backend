@@ -1,4 +1,5 @@
-﻿using MusicBares.Entidades;
+﻿using MusicBares.DTOs.Bar;
+using MusicBares.Entidades;
 
 namespace MusicBares.Application.Interfaces.Repositories;
 
@@ -27,5 +28,8 @@ public interface IBarRepositorio
     Task<IEnumerable<Bar>> ListarAsync();
 
     Task<bool> EliminarAsync(int idBar);
+    Task<bool> ReactivarAsync(int idBar);
+
+
 
 }
