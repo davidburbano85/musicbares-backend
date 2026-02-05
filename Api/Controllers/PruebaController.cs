@@ -15,17 +15,10 @@ namespace MusicBares.API.Controllers
         }
 
         [HttpGet("conexion")]
-        //public async Task<IActionResult> ProbarConexion()
-        //{
-        //    var resultado = await _repositorio.ProbarConexionAsync();
-        //    return Ok(resultado);
-        //}
-
-        public async Task<string> ProbarConexionAsync()
+        public async Task<IActionResult> ProbarConexion()
         {
-            return await Task.FromResult("API OK (sin BD)");
+            var resultado = await _repositorio.ProbarConexionAsync();
+            return Ok(resultado);
         }
-
-
     }
 }
