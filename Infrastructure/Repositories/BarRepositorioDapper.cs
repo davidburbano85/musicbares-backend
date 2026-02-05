@@ -34,7 +34,13 @@ namespace MusicBares.Infrastructure.Repositories
             using var conexion = _fabricaConexion.CrearConexion();
 
             string sql = @"
-                SELECT *
+                SELECT 
+                    id_bar AS IdBar,
+                    nombre_bar AS NombreBar,
+                    direccion AS Direccion,
+                    id_usuario AS IdUsuario,
+                    estado AS Estado,
+                    fecha_registro AS FechaRegistro
                 FROM bar
                 WHERE estado = true;
             ";
@@ -48,7 +54,13 @@ namespace MusicBares.Infrastructure.Repositories
             using var conexion = _fabricaConexion.CrearConexion();
 
             string sql = @"
-                SELECT *
+                SELECT 
+                    id_bar AS IdBar,
+                    nombre_bar AS NombreBar,
+                    direccion AS Direccion,
+                    id_usuario AS IdUsuario,
+                    estado AS Estado,
+                    fecha_registro AS FechaRegistro
                 FROM bar
                 WHERE id_bar = @idBar;
             ";
@@ -62,7 +74,13 @@ namespace MusicBares.Infrastructure.Repositories
             using var conexion = _fabricaConexion.CrearConexion();
 
             string sql = @"
-                SELECT *
+                SELECT 
+                    id_bar AS IdBar,
+                    nombre_bar AS NombreBar,
+                    direccion AS Direccion,
+                    id_usuario AS IdUsuario,
+                    estado AS Estado,
+                    fecha_registro AS FechaRegistro
                 FROM bar
                 WHERE id_usuario = @idUsuario
                 AND estado = true;
