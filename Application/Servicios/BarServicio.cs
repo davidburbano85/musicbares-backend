@@ -150,44 +150,54 @@ namespace MusicBares.Application.Servicios
         {
             try
             {
-                // Verificar que el bar exista
+                // Validar existencia del bar
                 var barExistente = await _barRepositorio.ObtenerPorIdAsync(dto.IdBar);
 
                 if (barExistente == null)
+                {
                     return new BarRespuestaDto
                     {
                         Exitoso = false,
                         Mensaje = "El bar no existe"
                     };
+                }
 
-                // Validaciones básicas
+                // Validaciones de negocio
                 if (string.IsNullOrWhiteSpace(dto.NombreBar))
+                {
                     return new BarRespuestaDto
                     {
                         Exitoso = false,
                         Mensaje = "El nombre del bar es obligatorio"
                     };
+                }
 
                 if (string.IsNullOrWhiteSpace(dto.Direccion))
+                {
                     return new BarRespuestaDto
                     {
                         Exitoso = false,
                         Mensaje = "La dirección es obligatoria"
                     };
+                }
 
                 // Mapping DTO → Entidad
-                barExistente.NombreBar = dto.NombreBar;
-                barExistente.Direccion = dto.Direccion;
-                barExistente.Estado = dto.Estado;
+                barExistente.NombreBar = dto.NombreBar.Trim();
+                barExistente.Direccion = dto.Direccion.Trim();
+
+                // ⚠️ Estado NO se modifica aquí
+                // Estado solo se cambia en Eliminar o Reactivar
 
                 var actualizado = await _barRepositorio.ActualizarAsync(barExistente);
 
                 if (!actualizado)
+                {
                     return new BarRespuestaDto
                     {
                         Exitoso = false,
                         Mensaje = "No se pudo actualizar el bar"
                     };
+                }
 
                 return new BarRespuestaDto
                 {
