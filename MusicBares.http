@@ -1,0 +1,6 @@
+@MusicBares_HostAddress = http://localhost:5294
+
+GET {{MusicBares_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
