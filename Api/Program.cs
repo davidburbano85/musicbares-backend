@@ -1,6 +1,11 @@
 using Microsoft.AspNetCore.HttpOverrides;
 using MusicBares.Infrastructure.Conexion;
 using MusicBares.Infrastructure.Repositorios;
+using MusicBares.Application.Interfaces.Servicios;
+using MusicBares.Application.Interfaces.Repositories;
+using MusicBares.Application.Servicios;
+using MusicBares.Infrastructure.Repositories;
+
 
 
 
@@ -10,6 +15,9 @@ var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 builder.WebHost.UseUrls($"http://*:{port}");
 builder.Services.AddSingleton<FabricaConexion>();
 builder.Services.AddScoped<PruebaConexionRepositorio>();
+builder.Services.AddScoped<IBarRepositorio, BarRepositorioDapper>();
+builder.Services.AddScoped<IBarServicio, BarServicio>();
+
 
 
 // Add services to the container.
