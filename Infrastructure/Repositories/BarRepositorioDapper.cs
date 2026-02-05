@@ -14,54 +14,73 @@ namespace MusicBares.Infrastructure.Repositories
             _fabricaConexion = fabricaConexion;
         }
 
+        // Crea un nuevo bar y retorna el id generado
         public async Task<int> CrearAsync(Bar bar)
         {
             using var conexion = _fabricaConexion.CrearConexion();
 
             string sql = @"
-                INSERT INTO bares (nombre, direccion, id_usuario)
-                VALUES (@Nombre, @Direccion, @IdUsuario)
-                RETURNING id;
+                INSERT INTO bar (nombre_bar, direccion, id_usuario)
+                VALUES (@NombreBar, @Direccion, @IdUsuario)
+                RETURNING id_bar;
             ";
 
             return await conexion.ExecuteScalarAsync<int>(sql, bar);
         }
 
+        // Lista todos los bares activos del sistema
         public async Task<IEnumerable<Bar>> ListarAsync()
         {
             using var conexion = _fabricaConexion.CrearConexion();
 
-            string sql = "SELECT * FROM bares";
+            string sql = @"
+                SELECT *
+                FROM bar
+                WHERE estado = true;
+            ";
 
             return await conexion.QueryAsync<Bar>(sql);
         }
 
+        // Obtiene un bar por su identificador
         public async Task<Bar?> ObtenerPorIdAsync(int idBar)
         {
             using var conexion = _fabricaConexion.CrearConexion();
 
-            string sql = "SELECT * FROM bares WHERE id = @idBar";
+            string sql = @"
+                SELECT *
+                FROM bar
+                WHERE id_bar = @idBar;
+            ";
 
             return await conexion.QueryFirstOrDefaultAsync<Bar>(sql, new { idBar });
         }
 
+        // Obtiene bares pertenecientes a un usuario específico
         public async Task<IEnumerable<Bar>> ObtenerPorUsuarioAsync(int idUsuario)
         {
             using var conexion = _fabricaConexion.CrearConexion();
 
-            string sql = "SELECT * FROM bares WHERE id_usuario = @idUsuario";
+            string sql = @"
+                SELECT *
+                FROM bar
+                WHERE id_usuario = @idUsuario
+                AND estado = true;
+            ";
 
             return await conexion.QueryAsync<Bar>(sql, new { idUsuario });
         }
 
+        // Verifica si un bar pertenece a un usuario
         public async Task<bool> ExisteBarUsuarioAsync(int idBar, int idUsuario)
         {
             using var conexion = _fabricaConexion.CrearConexion();
 
             string sql = @"
                 SELECT COUNT(1)
-                FROM bares
-                WHERE id = @idBar AND id_usuario = @idUsuario
+                FROM bar
+                WHERE id_bar = @idBar
+                AND id_usuario = @idUsuario;
             ";
 
             var existe = await conexion.ExecuteScalarAsync<int>(sql, new { idBar, idUsuario });
@@ -69,15 +88,16 @@ namespace MusicBares.Infrastructure.Repositories
             return existe > 0;
         }
 
+        // Actualiza información de un bar existente
         public async Task<bool> ActualizarAsync(Bar bar)
         {
             using var conexion = _fabricaConexion.CrearConexion();
 
             string sql = @"
-                UPDATE bares
-                SET nombre = @Nombre,
+                UPDATE bar
+                SET nombre_bar = @NombreBar,
                     direccion = @Direccion
-                WHERE id = @Id
+                WHERE id_bar = @IdBar;
             ";
 
             var filas = await conexion.ExecuteAsync(sql, bar);
