@@ -246,7 +246,8 @@ namespace MusicBares.Application.Servicios
 
         public async Task<BarRespuestaDto> ReactivarAsync(int idBar)
         {
-            Console.WriteLine("🔥 ENTRO AL SERVICIO");
+            Console.WriteLine("🔥 VERSION NUEVA DEL SERVICIO 🔥🔥🔥");
+
 
 
             // Validación básica del id
@@ -254,8 +255,10 @@ namespace MusicBares.Application.Servicios
                 throw new ArgumentException("El id del bar es inválido");
 
             // Buscar el bar en BD
-            var bar = await _barRepositorio.ObtenerPorIdAsync(idBar);
 
+            Console.WriteLine("ANTES DE LLAMAR REPO");
+            var bar = await _barRepositorio.ObtenerPorIdAsync(idBar);
+            Console.WriteLine("DESPUES DE LLAMAR REPO");
             if (bar == null)
                 throw new Exception("El bar no existe");
 
