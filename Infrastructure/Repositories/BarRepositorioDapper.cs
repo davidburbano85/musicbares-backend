@@ -113,11 +113,12 @@ namespace MusicBares.Infrastructure.Repositories
             using var conexion = _fabricaConexion.CrearConexion();
 
             string sql = @"
-                UPDATE bar
-                SET nombre_bar = @NombreBar,
-                    direccion = @Direccion
-                WHERE id_bar = @IdBar;
-            ";
+                    UPDATE bar
+                    SET nombre_bar = @NombreBar,
+                        direccion = @Direccion,
+                        estado = @Estado
+                    WHERE id_bar = @IdBar
+                ";
 
             var filas = await conexion.ExecuteAsync(sql, bar);
 
@@ -162,10 +163,10 @@ namespace MusicBares.Infrastructure.Repositories
             using var conexion = _fabricaConexion.CrearConexion();
 
             string sql = @"
-        UPDATE bar
-        SET estado = TRUE
-        WHERE id_bar = @idBar
-    ";
+                UPDATE bar
+                SET estado = TRUE
+                WHERE id_bar = @idBar
+            ";
 
             var filas = await conexion.ExecuteAsync(sql, new { idBar });
 
