@@ -158,7 +158,7 @@ namespace MusicBares.API.Controllers
             }
 
 
-            return Ok(new { mensaje = "🔥 CONTROLADOR NUEVO 🔥" });
+            //return Ok(new { mensaje = "🔥 CONTROLADOR NUEVO 🔥" });
         }
 
     }
