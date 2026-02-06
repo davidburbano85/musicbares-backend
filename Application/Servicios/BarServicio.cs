@@ -246,6 +246,9 @@ namespace MusicBares.Application.Servicios
 
         public async Task<BarRespuestaDto> ReactivarAsync(int idBar)
         {
+            Console.WriteLine("🔥 ENTRO AL SERVICIO");
+
+
             // Validación básica del id
             if (idBar <= 0)
                 throw new ArgumentException("El id del bar es inválido");

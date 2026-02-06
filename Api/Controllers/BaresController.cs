@@ -154,6 +154,9 @@ namespace MusicBares.API.Controllers
             //{
             //    return StatusCode(500, new { mensaje = ex.Message });
             //}
+
+            Console.WriteLine("🔥 ENTRO AL CONTROLLER");
+
             return Ok(new { mensaje = "🔥 CONTROLADOR NUEVO 🔥" });
         }
 

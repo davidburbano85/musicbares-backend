@@ -157,6 +157,8 @@ namespace MusicBares.Infrastructure.Repositories
 
         public async Task<bool> ReactivarAsync(int idBar)
         {
+            Console.WriteLine("🔥 ENTRO AL REPOSITORIO");
+
             using var conexion = _fabricaConexion.CrearConexion();
 
             string sql = @"
