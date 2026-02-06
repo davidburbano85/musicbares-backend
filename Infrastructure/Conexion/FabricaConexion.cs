@@ -17,11 +17,14 @@ namespace MusicBares.Infrastructure.Conexion
         // Método que crea una conexión nueva a PostgreSQL
         public IDbConnection CrearConexion()
         {
-            // Obtiene la cadena de conexión desde appsettings
             var connectionString = _configuration.GetConnectionString("DefaultConnection");
 
-            // Retorna conexión PostgreSQL
+            Console.WriteLine("🔥 CONNECTION STRING:");
+            Console.WriteLine(connectionString);
+
             return new NpgsqlConnection(connectionString);
         }
+
+
     }
 }
