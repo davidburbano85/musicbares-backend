@@ -67,7 +67,7 @@ namespace MusicBares.API.Controllers
         }
 
         // 🔹 Actualizar usuario
-        [HttpPut()]
+        [HttpPut("{idUsuario:int}")]
         public async Task<IActionResult> Actualizar(int idUsuario,[FromBody] UsuarioActualizarDto dto)
         {
             try
