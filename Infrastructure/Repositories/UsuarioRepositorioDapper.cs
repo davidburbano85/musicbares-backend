@@ -10,10 +10,11 @@ namespace MusicBares.Infrastructure.Repositorios
     public class UsuarioRepositorioDapper : IUsuarioRepositorio
     {
         // Fábrica que crea la conexión a la base de datos
-        private readonly IDbConnectionFactory _fabricaConexion;
+        private readonly FabricaConexion _fabricaConexion;
+
 
         // Inyección de dependencias
-        public UsuarioRepositorioDapper(IDbConnectionFactory fabricaConexion)
+        public UsuarioRepositorioDapper(FabricaConexion fabricaConexion)
         {
             _fabricaConexion = fabricaConexion;
         }
