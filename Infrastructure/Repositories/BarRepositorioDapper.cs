@@ -49,6 +49,7 @@ namespace MusicBares.Infrastructure.Repositories
             return await conexion.QueryAsync<Bar>(sql);
         }
 
+
         // Obtiene un bar por su identificador
         public async Task<Bar?> ObtenerPorIdAsync(int idBar)
         {

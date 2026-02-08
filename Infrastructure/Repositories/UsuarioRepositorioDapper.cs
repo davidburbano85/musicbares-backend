@@ -136,8 +136,8 @@ namespace MusicBares.Infrastructure.Repositories
                     fecha_creacion AS FechaCreacion,
                     estado AS Estado
                 FROM usuario
-                WHERE estado = TRUE
-                ORDER BY id_usuario;
+                WHERE estado = true
+                
             ";
 
             return await conexion.QueryAsync<Usuario>(sql);

@@ -1,7 +1,5 @@
-﻿using BCrypt.Net;
-using MusicBares.Application.Interfaces.Repositories;
+﻿using MusicBares.Application.Interfaces.Repositories;
 using MusicBares.Application.Interfaces.Servicios;
-using MusicBares.DTOs.Bar;
 using MusicBares.DTOs.Usuario;
 using MusicBares.Entidades;
 

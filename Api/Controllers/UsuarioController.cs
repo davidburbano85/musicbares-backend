@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MusicBares.Application.Interfaces.Servicios;
-using MusicBares.Application.Servicios;
 using MusicBares.DTOs.Usuario;
 
 namespace MusicBares.API.Controllers
@@ -9,9 +8,9 @@ namespace MusicBares.API.Controllers
     [Route("api/usuario")]
     public class UsuarioController : ControllerBase
     {
-        private readonly UsuarioServicio _usuarioServicio;
+        private readonly IUsuarioServicio _usuarioServicio;
 
-        public UsuarioController(UsuarioServicio usuarioServicio)
+        public UsuarioController(IUsuarioServicio usuarioServicio)
         {
             _usuarioServicio = usuarioServicio;
         }

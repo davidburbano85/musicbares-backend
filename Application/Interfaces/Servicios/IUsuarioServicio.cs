@@ -19,6 +19,7 @@ namespace MusicBares.Application.Interfaces.Servicios
         // Listar usuarios
         Task<IEnumerable<UsuarioListadoDto>> ListarAsync();
 
+        
         // Eliminar usuario (soft delete)
         Task<UsuarioRespuestaDto> EliminarAsync(int idUsuario);
 
