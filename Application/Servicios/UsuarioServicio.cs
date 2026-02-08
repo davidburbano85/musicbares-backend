@@ -170,28 +170,42 @@ namespace MusicBares.Application.Servicios
         //    }
         //}
         // Método de actualización (puedes usar el que definimos antes)
+
+
         public async Task<UsuarioRespuestaDto> ActualizarAsync(UsuarioActualizarDto dto)
         {
             try
             {
+                // 1. Buscar por correo ACTUAL
                 var usuario = await ObtenerPorCorreoAsync(dto.CorreoElectronico);
 
                 if (usuario == null)
                     return new UsuarioRespuestaDto(false, "Usuario no encontrado.");
 
-                // Verifica contraseña
+                // 2. Verificar contraseña
                 if (!BCrypt.Net.BCrypt.Verify(dto.Contrasena, usuario.ContrasenaHash))
                     return new UsuarioRespuestaDto(false, "Contraseña incorrecta.");
 
-                // Actualiza campos
+                // 3. Si quiere cambiar el correo, validar que no exista
+                if (!string.IsNullOrWhiteSpace(dto.CorreoElectronicoNuevo) &&
+                    !dto.CorreoElectronicoNuevo.Equals(usuario.CorreoElectronico, StringComparison.OrdinalIgnoreCase))
+                {
+                    var correoExiste = await ObtenerPorCorreoAsync(dto.CorreoElectronicoNuevo);
+                    if (correoExiste != null)
+                        return new UsuarioRespuestaDto(false, "El correo electrónico ya está en uso.");
+
+                    usuario.CorreoElectronico = dto.CorreoElectronicoNuevo;
+                }
+
+                // 4. Actualizar otros campos
                 usuario.NombreCompleto = dto.NombreCompleto;
-                usuario.CorreoElectronico = dto.CorreoElectronico;
                 usuario.Estado = dto.Estado;
 
+                // 5. Cambiar contraseña solo si viene una nueva
                 if (!string.IsNullOrWhiteSpace(dto.Contrasena))
                     usuario.ContrasenaHash = BCrypt.Net.BCrypt.HashPassword(dto.Contrasena);
 
-                // Guardar cambios
+                // 6. Guardar cambios
                 var actualizado = await _usuarioRepositorio.ActualizarAsync(usuario);
 
                 if (!actualizado)
@@ -204,6 +218,7 @@ namespace MusicBares.Application.Servicios
                 return new UsuarioRespuestaDto(false, $"Error al actualizar usuario: {ex.Message}");
             }
         }
+
 
         // ================================
         // ELIMINAR (SOFT DELETE)

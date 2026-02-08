@@ -11,6 +11,8 @@
 
         // Nuevo correo del usuario
         public string CorreoElectronico { get; set; } = string.Empty;
+        public string CorreoElectronicoNuevo { get; set; } = string.Empty;
+
 
         // Nueva contraseña en texto plano (se hashea en el servicio)
         public string? Contrasena { get; set; }
