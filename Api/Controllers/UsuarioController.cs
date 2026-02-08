@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using MusicBares.Application.Interfaces.Servicios;
 using MusicBares.Application.Servicios;
 using MusicBares.DTOs.Usuario;
 
@@ -34,10 +35,23 @@ namespace MusicBares.API.Controllers
         // 🔹 Listar usuarios activos
         [HttpGet]
         public async Task<IActionResult> Listar()
+        //{
+        //    //var usuarios = await _usuarioServicio.ListarAsync();
+        //    return Ok(usuarios);
+        //}
         {
-            var usuarios = await _usuarioServicio.ListarAsync();
-            return Ok(usuarios);
+            try
+            {
+                var usuarios = await _usuarioServicio.ListarAsync();
+                return Ok(usuarios);
+    }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno al listar usuarios: {ex.Message}");
+}
         }
+
+
 
         // 🔹 Obtener usuario por id
         [HttpGet("{idUsuario:int}")]

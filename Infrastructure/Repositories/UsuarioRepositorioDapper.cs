@@ -2,8 +2,6 @@
 using MusicBares.Application.Interfaces.Repositories;
 using MusicBares.Entidades;
 using MusicBares.Infrastructure.Conexion;
-using MusicBares.Infrastructure.Data;
-using System.Data;
 
 namespace MusicBares.Infrastructure.Repositorios
 {
