@@ -81,7 +81,7 @@ namespace MusicBares.API.Controllers
         }
 
         // 🔥 Reactivar usuario
-        [HttpPatch("reactivar/{idUsuario:int}")]
+        [HttpPatch("reactivar/{idUsuario}")]
         public async Task<IActionResult> Reactivar(int idUsuario)
         {
             var resultado = await _usuarioServicio.ReactivarAsync(idUsuario);
