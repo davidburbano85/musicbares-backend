@@ -1,19 +1,35 @@
-﻿namespace MusicBares.DTOs.Usuario;
-
-public class UsuarioRespuestaDto
+﻿namespace MusicBares.DTOs.Usuario
 {
-    // Identificador del usuario
-    public int IdUsuario { get; set; }
+    public class UsuarioRespuestaDto
+    {
+        // Indica si la operación fue exitosa
+        public bool Exitoso { get; set; }
 
-    // Nombre del usuario
-    public string NombreCompleto { get; set; } = string.Empty;
+        // Mensaje informativo para el frontend
+        public string Mensaje { get; set; } = string.Empty;
 
-    // Correo electrónico del usuario
-    public string CorreoElectronico { get; set; } = string.Empty;
+        // Id del usuario cuando aplique (crear/login)
+        public int? IdUsuario { get; set; }
 
-    // Fecha de creación del usuario
-    public DateTime FechaCreacion { get; set; }
 
-    // Estado del usuario
-    public bool Estado { get; set; }
+        // 🔹 Constructor vacío (necesario para serialización)
+        public UsuarioRespuestaDto()
+        {
+        }
+
+        // 🔹 Constructor para respuestas simples
+        public UsuarioRespuestaDto(bool exitoso, string mensaje)
+        {
+            Exitoso = exitoso;
+            Mensaje = mensaje;
+        }
+
+        // 🔹 Constructor cuando se necesita devolver ID
+        public UsuarioRespuestaDto(bool exitoso, string mensaje, int? idUsuario)
+        {
+            Exitoso = exitoso;
+            Mensaje = mensaje;
+            IdUsuario = idUsuario;
+        }
+    }
 }

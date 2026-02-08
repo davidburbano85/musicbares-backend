@@ -20,4 +20,11 @@ public interface IUsuarioServicio
 
     // Lista todos los usuarios activos del sistema
     Task<IEnumerable<UsuarioListadoDto>> ListarAsync();
+
+    // Elimina usuario de forma lógica
+    Task<UsuarioRespuestaDto> EliminarAsync(int idUsuario);
+
+    // Reactiva usuario
+    Task<UsuarioRespuestaDto> ReactivarAsync(int idUsuario);
+
 }
