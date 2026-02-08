@@ -1,6 +1,7 @@
 ﻿using BCrypt.Net;
 using MusicBares.Application.Interfaces.Repositories;
 using MusicBares.Application.Interfaces.Servicios;
+using MusicBares.DTOs.Bar;
 using MusicBares.DTOs.Usuario;
 using MusicBares.Entidades;
 
@@ -89,15 +90,34 @@ namespace MusicBares.Application.Servicios
         // ================================
         public async Task<IEnumerable<UsuarioListadoDto>> ListarAsync()
         {
-            var usuarios = await _usuarioRepositorio.ListarAsync();
+            //var usuarios = await _usuarioRepositorio.ListarAsync();
 
-            return usuarios.Select(u => new UsuarioListadoDto
+            //return usuarios.Select(u => new UsuarioListadoDto
+            //{
+            //    IdUsuario = u.IdUsuario,
+            //    NombreCompleto = u.NombreCompleto,
+            //    CorreoElectronico = u.CorreoElectronico,
+            //    Estado = u.Estado
+            //});
+
+            try
             {
-                IdUsuario = u.IdUsuario,
-                NombreCompleto = u.NombreCompleto,
-                CorreoElectronico = u.CorreoElectronico,
-                Estado = u.Estado
-            });
+                var usuarios = await _usuarioRepositorio.ListarAsync();
+
+                // Mapping Entidad → DTO
+                return usuarios.Select(usuario => new UsuarioListadoDto
+                {
+                    IdUsuario = usuario.IdUsuario,
+                    NombreCompleto = usuario.NombreCompleto,
+                    CorreoElectronico = usuario.CorreoElectronico,
+                    Estado = usuario.Estado
+                });
+            }
+            catch
+            {
+                // Retornamos colección vacía para evitar romper el flujo
+                return Enumerable.Empty<UsuarioListadoDto>();
+            }
         }
 
         // ================================
