@@ -15,8 +15,12 @@ var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 builder.WebHost.UseUrls($"http://*:{port}");
 builder.Services.AddSingleton<FabricaConexion>();
 builder.Services.AddScoped<PruebaConexionRepositorio>();
+
 builder.Services.AddScoped<IBarRepositorio, BarRepositorioDapper>();
 builder.Services.AddScoped<IBarServicio, BarServicio>();
+
+builder.Services.AddScoped<IUsuarioRepositorio, UsuarioRepositorioDapper>();
+builder.Services.AddScoped<IUsuarioServicio, UsuarioServicio>();
 
 
 

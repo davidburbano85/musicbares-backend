@@ -1,30 +1,28 @@
 ﻿using MusicBares.DTOs.Usuario;
 
-namespace MusicBares.Application.Interfaces.Servicios;
-
-public interface IUsuarioServicio
+namespace MusicBares.Application.Interfaces.Servicios
 {
-    // Registra un nuevo usuario en el sistema
-    // Aplica validaciones y seguridad de contraseña
-    Task<UsuarioRespuestaDto> RegistrarAsync(UsuarioCrearDto dto);
+    public interface IUsuarioServicio
+    {
+        // Crear usuario
+        Task<UsuarioRespuestaDto> CrearAsync(UsuarioCrearDto dto);
 
-    // Permite autenticación de usuario
-    // Valida credenciales y retorna datos del usuario
-    Task<UsuarioRespuestaDto?> LoginAsync(UsuarioLoginDto dto);
+        // Login
+        Task<UsuarioRespuestaDto> LoginAsync(UsuarioLoginDto dto);
 
-    // Obtiene información detallada de un usuario
-    Task<UsuarioRespuestaDto?> ObtenerPorIdAsync(int idUsuario);
+        // Obtener usuario por id
+        Task<UsuarioListadoDto?> ObtenerPorIdAsync(int idUsuario);
 
-    // Permite actualizar información del usuario
-    Task<bool> ActualizarAsync(UsuarioActualizarDto dto);
+        // Actualizar usuario
+        Task<UsuarioRespuestaDto> ActualizarAsync(UsuarioActualizarDto dto);
 
-    // Lista todos los usuarios activos del sistema
-    Task<IEnumerable<UsuarioListadoDto>> ListarAsync();
+        // Listar usuarios
+        Task<IEnumerable<UsuarioListadoDto>> ListarAsync();
 
-    // Elimina usuario de forma lógica
-    Task<UsuarioRespuestaDto> EliminarAsync(int idUsuario);
+        // Eliminar usuario (soft delete)
+        Task<UsuarioRespuestaDto> EliminarAsync(int idUsuario);
 
-    // Reactiva usuario
-    Task<UsuarioRespuestaDto> ReactivarAsync(int idUsuario);
-
+        // Reactivar usuario
+        Task<UsuarioRespuestaDto> ReactivarAsync(int idUsuario);
+    }
 }

@@ -1,16 +1,15 @@
 ﻿using BCrypt.Net;
 using MusicBares.Application.Interfaces.Repositories;
+using MusicBares.Application.Interfaces.Servicios;
 using MusicBares.DTOs.Usuario;
 using MusicBares.Entidades;
 
 namespace MusicBares.Application.Servicios
 {
-    public class UsuarioServicio
+    public class UsuarioServicio : IUsuarioServicio
     {
-        // Repositorio de usuarios para acceso a datos
         private readonly IUsuarioRepositorio _usuarioRepositorio;
 
-        // Inyección de dependencias
         public UsuarioServicio(IUsuarioRepositorio usuarioRepositorio)
         {
             _usuarioRepositorio = usuarioRepositorio;
@@ -23,28 +22,22 @@ namespace MusicBares.Application.Servicios
         {
             try
             {
-                // Validar nombre
                 if (string.IsNullOrWhiteSpace(dto.NombreCompleto))
                     return new UsuarioRespuestaDto(false, "El nombre es obligatorio");
 
-                // Validar correo
                 if (string.IsNullOrWhiteSpace(dto.CorreoElectronico))
                     return new UsuarioRespuestaDto(false, "El correo es obligatorio");
 
-                // Validar contraseña
                 if (string.IsNullOrWhiteSpace(dto.Contrasena))
                     return new UsuarioRespuestaDto(false, "La contraseña es obligatoria");
 
-                // Verificar si el correo ya existe
                 var correoExiste = await _usuarioRepositorio.ExisteCorreoAsync(dto.CorreoElectronico);
 
                 if (correoExiste)
                     return new UsuarioRespuestaDto(false, "El correo ya está registrado");
 
-                // Hashear contraseña con BCrypt
                 var hash = BCrypt.Net.BCrypt.HashPassword(dto.Contrasena);
 
-                // Mapear DTO → Entidad
                 var usuario = new Usuario
                 {
                     NombreCompleto = dto.NombreCompleto,
@@ -64,7 +57,7 @@ namespace MusicBares.Application.Servicios
         }
 
         // ================================
-        // LOGIN USUARIO
+        // LOGIN
         // ================================
         public async Task<UsuarioRespuestaDto> LoginAsync(UsuarioLoginDto dto)
         {
@@ -72,15 +65,12 @@ namespace MusicBares.Application.Servicios
             {
                 var usuario = await _usuarioRepositorio.ObtenerPorCorreoAsync(dto.CorreoElectronico);
 
-                // Validar existencia
                 if (usuario == null)
                     return new UsuarioRespuestaDto(false, "Credenciales inválidas");
 
-                // Validar estado
                 if (!usuario.Estado)
                     return new UsuarioRespuestaDto(false, "El usuario está inactivo");
 
-                // Validar contraseña
                 bool passwordValido = BCrypt.Net.BCrypt.Verify(dto.Contrasena, usuario.ContrasenaHash);
 
                 if (!passwordValido)
@@ -95,13 +85,12 @@ namespace MusicBares.Application.Servicios
         }
 
         // ================================
-        // LISTAR USUARIOS ACTIVOS
+        // LISTAR USUARIOS
         // ================================
         public async Task<IEnumerable<UsuarioListadoDto>> ListarAsync()
         {
             var usuarios = await _usuarioRepositorio.ListarAsync();
 
-            // Convertimos entidades a DTO de listado
             return usuarios.Select(u => new UsuarioListadoDto
             {
                 IdUsuario = u.IdUsuario,
@@ -112,7 +101,29 @@ namespace MusicBares.Application.Servicios
         }
 
         // ================================
-        // ACTUALIZAR USUARIO
+        // OBTENER POR ID
+        // ================================
+        public async Task<UsuarioListadoDto?> ObtenerPorIdAsync(int idUsuario)
+        {
+            if (idUsuario <= 0)
+                return null;
+
+            var usuario = await _usuarioRepositorio.ObtenerPorIdAsync(idUsuario);
+
+            if (usuario == null)
+                return null;
+
+            return new UsuarioListadoDto
+            {
+                IdUsuario = usuario.IdUsuario,
+                NombreCompleto = usuario.NombreCompleto,
+                CorreoElectronico = usuario.CorreoElectronico,
+                Estado = usuario.Estado
+            };
+        }
+
+        // ================================
+        // ACTUALIZAR
         // ================================
         public async Task<UsuarioRespuestaDto> ActualizarAsync(UsuarioActualizarDto dto)
         {
@@ -123,7 +134,6 @@ namespace MusicBares.Application.Servicios
                 if (usuario == null)
                     return new UsuarioRespuestaDto(false, "El usuario no existe");
 
-                // Validaciones
                 if (string.IsNullOrWhiteSpace(dto.NombreCompleto))
                     return new UsuarioRespuestaDto(false, "El nombre es obligatorio");
 
@@ -134,11 +144,8 @@ namespace MusicBares.Application.Servicios
                 usuario.CorreoElectronico = dto.CorreoElectronico;
                 usuario.Estado = dto.Estado;
 
-                // Si envían contraseña nueva, se vuelve a hashear
                 if (!string.IsNullOrWhiteSpace(dto.Contrasena))
-                {
                     usuario.ContrasenaHash = BCrypt.Net.BCrypt.HashPassword(dto.Contrasena);
-                }
 
                 var actualizado = await _usuarioRepositorio.ActualizarAsync(usuario);
 
@@ -154,7 +161,7 @@ namespace MusicBares.Application.Servicios
         }
 
         // ================================
-        // ELIMINAR USUARIO (SOFT DELETE)
+        // ELIMINAR (SOFT DELETE)
         // ================================
         public async Task<UsuarioRespuestaDto> EliminarAsync(int idUsuario)
         {
@@ -182,7 +189,7 @@ namespace MusicBares.Application.Servicios
         }
 
         // ================================
-        // REACTIVAR USUARIO
+        // REACTIVAR
         // ================================
         public async Task<UsuarioRespuestaDto> ReactivarAsync(int idUsuario)
         {
@@ -211,29 +218,5 @@ namespace MusicBares.Application.Servicios
                 return new UsuarioRespuestaDto(false, $"Error al reactivar usuario: {ex.Message}");
             }
         }
-
-
-        public async Task<UsuarioListadoDto?> ObtenerPorIdAsync(int idUsuario)
-        {
-            if (idUsuario <= 0)
-                return null;
-
-            var usuario = await _usuarioRepositorio.ObtenerPorIdAsync(idUsuario);
-
-            if (usuario == null)
-                return null;
-
-            return new UsuarioListadoDto
-            {
-                IdUsuario = usuario.IdUsuario,
-                NombreCompleto = usuario.NombreCompleto,
-                CorreoElectronico = usuario.CorreoElectronico,
-                Estado = usuario.Estado
-            };
-        }
-
-
-
-
     }
 }
