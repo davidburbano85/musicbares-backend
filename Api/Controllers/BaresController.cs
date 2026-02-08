@@ -97,10 +97,12 @@ namespace MusicBares.API.Controllers
         // Actualizar información de un bar
         // ================================
         [HttpPut("{IdBar}")]
-        public async Task<IActionResult> Actualizar([FromBody] BarActualizarDto dto)
+        public async Task<IActionResult> Actualizar(int IdBar,[FromBody] BarActualizarDto dto)
         {
             try
             {
+                if (IdBar != dto.IdBar)
+                    return BadRequest("el id no existe.");
                 var resultado = await _barServicio.ActualizarAsync(dto);
 
                 if (!resultado.Exitoso)
