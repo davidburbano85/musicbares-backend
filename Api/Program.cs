@@ -1,10 +1,9 @@
 using Microsoft.AspNetCore.HttpOverrides;
 using MusicBares.Infrastructure.Conexion;
-using MusicBares.Infrastructure.Repositorios;
+using MusicBares.Infrastructure.Repositories;
 using MusicBares.Application.Interfaces.Servicios;
 using MusicBares.Application.Interfaces.Repositories;
 using MusicBares.Application.Servicios;
-using MusicBares.Infrastructure.Repositories;
 
 
 

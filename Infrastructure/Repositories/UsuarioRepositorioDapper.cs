@@ -3,7 +3,7 @@ using MusicBares.Application.Interfaces.Repositories;
 using MusicBares.Entidades;
 using MusicBares.Infrastructure.Conexion;
 
-namespace MusicBares.Infrastructure.Repositorios
+namespace MusicBares.Infrastructure.Repositories
 {
     public class UsuarioRepositorioDapper : IUsuarioRepositorio
     {
