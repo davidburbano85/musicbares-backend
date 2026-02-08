@@ -2,6 +2,7 @@
 using MusicBares.Application.Interfaces.Servicios;
 using MusicBares.DTOs.Usuario;
 using MusicBares.Entidades;
+using BCrypt.Net;
 
 namespace MusicBares.Application.Servicios
 {
@@ -87,16 +88,7 @@ namespace MusicBares.Application.Servicios
         // LISTAR USUARIOS
         // ================================
         public async Task<IEnumerable<UsuarioListadoDto>> ListarAsync()
-        {
-            //var usuarios = await _usuarioRepositorio.ListarAsync();
-
-            //return usuarios.Select(u => new UsuarioListadoDto
-            //{
-            //    IdUsuario = u.IdUsuario,
-            //    NombreCompleto = u.NombreCompleto,
-            //    CorreoElectronico = u.CorreoElectronico,
-            //    Estado = u.Estado
-            //});
+        {          
 
             try
             {
@@ -143,21 +135,55 @@ namespace MusicBares.Application.Servicios
         // ================================
         // ACTUALIZAR
         // ================================
+        //public async Task<UsuarioRespuestaDto> ActualizarAsync(UsuarioActualizarDto dto)
+        //{
+        //    try
+        //    {
+        //        var usuario = await _usuarioRepositorio.ObtenerPorIdAsync(dto.IdUsuario);
+
+        //        if (usuario == null)
+        //            return new UsuarioRespuestaDto(false, "El usuario no existe");
+
+        //        if (string.IsNullOrWhiteSpace(dto.NombreCompleto))
+        //            return new UsuarioRespuestaDto(false, "El nombre es obligatorio");
+
+        //        if (string.IsNullOrWhiteSpace(dto.CorreoElectronico))
+        //            return new UsuarioRespuestaDto(false, "El correo es obligatorio");
+
+        //        usuario.NombreCompleto = dto.NombreCompleto;
+        //        usuario.CorreoElectronico = dto.CorreoElectronico;
+        //        usuario.Estado = dto.Estado;
+
+        //        if (!string.IsNullOrWhiteSpace(dto.Contrasena))
+        //            usuario.ContrasenaHash = BCrypt.Net.BCrypt.HashPassword(dto.Contrasena);
+
+        //        var actualizado = await _usuarioRepositorio.ActualizarAsync(usuario);
+
+        //        if (!actualizado)
+        //            return new UsuarioRespuestaDto(false, "No se pudo actualizar el usuario");
+
+        //        return new UsuarioRespuestaDto(true, "Usuario actualizado correctamente");
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return new UsuarioRespuestaDto(false, $"Error al actualizar usuario: {ex.Message}");
+        //    }
+        //}
+        // Método de actualización (puedes usar el que definimos antes)
         public async Task<UsuarioRespuestaDto> ActualizarAsync(UsuarioActualizarDto dto)
         {
             try
             {
-                var usuario = await _usuarioRepositorio.ObtenerPorIdAsync(dto.IdUsuario);
+                var usuario = await ObtenerPorCorreoAsync(dto.CorreoElectronico);
 
                 if (usuario == null)
-                    return new UsuarioRespuestaDto(false, "El usuario no existe");
+                    return new UsuarioRespuestaDto(false, "Usuario no encontrado.");
 
-                if (string.IsNullOrWhiteSpace(dto.NombreCompleto))
-                    return new UsuarioRespuestaDto(false, "El nombre es obligatorio");
+                // Verifica contraseña
+                if (!BCrypt.Net.BCrypt.Verify(dto.Contrasena, usuario.ContrasenaHash))
+                    return new UsuarioRespuestaDto(false, "Contraseña incorrecta.");
 
-                if (string.IsNullOrWhiteSpace(dto.CorreoElectronico))
-                    return new UsuarioRespuestaDto(false, "El correo es obligatorio");
-
+                // Actualiza campos
                 usuario.NombreCompleto = dto.NombreCompleto;
                 usuario.CorreoElectronico = dto.CorreoElectronico;
                 usuario.Estado = dto.Estado;
@@ -165,12 +191,13 @@ namespace MusicBares.Application.Servicios
                 if (!string.IsNullOrWhiteSpace(dto.Contrasena))
                     usuario.ContrasenaHash = BCrypt.Net.BCrypt.HashPassword(dto.Contrasena);
 
+                // Guardar cambios
                 var actualizado = await _usuarioRepositorio.ActualizarAsync(usuario);
 
                 if (!actualizado)
-                    return new UsuarioRespuestaDto(false, "No se pudo actualizar el usuario");
+                    return new UsuarioRespuestaDto(false, "No se pudo actualizar el usuario.");
 
-                return new UsuarioRespuestaDto(true, "Usuario actualizado correctamente");
+                return new UsuarioRespuestaDto(true, "Usuario actualizado correctamente.");
             }
             catch (Exception ex)
             {
@@ -236,5 +263,19 @@ namespace MusicBares.Application.Servicios
                 return new UsuarioRespuestaDto(false, $"Error al reactivar usuario: {ex.Message}");
             }
         }
+
+        // Método para obtener un usuario por correo
+        public async Task<Usuario?> ObtenerPorCorreoAsync(string correoElectronico)
+        {
+            if (string.IsNullOrWhiteSpace(correoElectronico))
+                return null;
+
+            // Llama al repositorio que hace la consulta a la base de datos
+            var usuario = await _usuarioRepositorio.ObtenerPorCorreoAsync(correoElectronico);
+
+            return usuario;
+        }
+
+
     }
 }

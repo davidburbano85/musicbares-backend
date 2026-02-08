@@ -66,27 +66,50 @@ namespace MusicBares.API.Controllers
             return Ok(usuario);
         }
 
+
         // 🔹 Actualizar usuario
-        [HttpPut("{idUsuario:int}")]
-        public async Task<IActionResult> Actualizar(int idUsuario,[FromBody] UsuarioActualizarDto dto)
-        {
-            try
+        //[HttpPut("{idUsuario:int}")]
+        //public async Task<IActionResult> Actualizar(int idUsuario,[FromBody] UsuarioActualizarDto dto)
+        //{
+        //    try
+        //    {
+        //        if (idUsuario != dto.IdUsuario)
+        //            return BadRequest("el id no existe.");
+        //        var resultado = await _usuarioServicio.ActualizarAsync(dto);
+
+        //        if (!resultado.Exitoso)
+        //            return BadRequest(resultado);
+
+        //        return Ok(resultado);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, $"Error interno al actualizar el bar: {ex.Message}");
+        //    }
+        //}
+
+        [HttpPut("{correoElectronico}")]
+        public async Task<IActionResult> Actualizar(
+        string correoElectronico,
+        [FromBody] UsuarioActualizarDto dto)
             {
-                if (idUsuario != dto.IdUsuario)
-                    return BadRequest("el id no existe.");
-                var resultado = await _usuarioServicio.ActualizarAsync(dto);
+                try
+                {
+                    if (!string.Equals(correoElectronico, dto.CorreoElectronico, StringComparison.OrdinalIgnoreCase))
+                        return BadRequest("El correo electrónico no coincide.");
 
-                if (!resultado.Exitoso)
-                    return BadRequest(resultado);
+                    var resultado = await _usuarioServicio.ActualizarAsync(dto);
 
-                return Ok(resultado);
+                    if (!resultado.Exitoso)
+                        return BadRequest(resultado);
+
+                    return Ok(resultado);
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(500, $"Error interno al actualizar el usuario: {ex.Message}");
+                }
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error interno al actualizar el bar: {ex.Message}");
-            }
-        }
-
 
 
 
