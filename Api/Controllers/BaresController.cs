@@ -96,7 +96,7 @@ namespace MusicBares.API.Controllers
         // ================================
         // Actualizar información de un bar
         // ================================
-        [HttpPut]
+        [HttpPut("{IdBar}")]
         public async Task<IActionResult> Actualizar([FromBody] BarActualizarDto dto)
         {
             try
