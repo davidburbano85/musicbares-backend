@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MusicBares.Application.Interfaces.Servicios;
+using MusicBares.Application.Servicios;
 using MusicBares.DTOs.Usuario;
+using MusicBares.Entidades;
 
 namespace MusicBares.API.Controllers
 {
@@ -65,12 +67,28 @@ namespace MusicBares.API.Controllers
         }
 
         // 🔹 Actualizar usuario
-        [HttpPut]
-        public async Task<IActionResult> Actualizar([FromBody] UsuarioActualizarDto dto)
+        [HttpPut("{idUsuario:int}")]
+        public async Task<IActionResult> Actualizar(int idUsuario,[FromBody] UsuarioActualizarDto dto)
         {
-            var resultado = await _usuarioServicio.ActualizarAsync(dto);
-            return Ok(resultado);
+            try
+            {
+                if (idUsuario != dto.IdUsuario)
+                    return BadRequest("el id no existe.");
+                var resultado = await _usuarioServicio.ActualizarAsync(dto);
+
+                if (!resultado.Exitoso)
+                    return BadRequest(resultado);
+
+                return Ok(resultado);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno al actualizar el bar: {ex.Message}");
+            }
         }
+
+
+
 
         // 🔥 Eliminar usuario (lógico)
         [HttpDelete("{idUsuario:int}")]
