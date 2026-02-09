@@ -5,92 +5,84 @@ using MusicBares.DTOs.VideoMesa;
 namespace MusicBares.API.Controllers
 {
     [ApiController]
-    [Route("api/video-mesa")]
+    [Route("api/[controller]")]
     public class VideoMesaController : ControllerBase
     {
-        private readonly IVideoMesaServicio _videoMesaServicio;
+        private readonly IVideoMesaServicio _servicio;
 
-        public VideoMesaController(IVideoMesaServicio videoMesaServicio)
+        public VideoMesaController(IVideoMesaServicio servicio)
         {
-            _videoMesaServicio = videoMesaServicio;
+            _servicio = servicio;
         }
 
-        // ======================================================
-        // CREAR VIDEO DESDE UNA MESA
-        // ======================================================
+        // =============================================
+        // Una mesa solicita un video
+        // POST: api/VideoMesa
+        // =============================================
         [HttpPost]
-        public async Task<IActionResult> Crear([FromBody] VideoMesaCrearDto dto)
+        public async Task<ActionResult<VideoMesaRespuestaDto>> Crear(
+            [FromBody] VideoMesaCrearDto dto)
         {
-            try
-            {
-                var resultado = await _videoMesaServicio.CrearAsync(dto);
-                return Ok(resultado);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { mensaje = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { mensaje = ex.Message });
-            }
+            var resultado = await _servicio.CrearAsync(dto);
+            return Ok(resultado);
         }
 
-        // ======================================================
-        // LISTAR VIDEOS POR MESA
-        // ======================================================
-        [HttpGet("mesa/{idMesa}")]
-        public async Task<IActionResult> ObtenerPorMesa(int idMesa)
+        // =============================================
+        // Obtener videos de una mesa
+        // GET: api/VideoMesa/mesa/5
+        // =============================================
+        [HttpGet("mesa/{idMesa:int}")]
+        public async Task<ActionResult<IEnumerable<VideoMesaListadoDto>>> ObtenerPorMesa(
+            int idMesa)
         {
-            try
-            {
-                var videos = await _videoMesaServicio.ObtenerPorMesaAsync(idMesa);
-                return Ok(videos);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { mensaje = ex.Message });
-            }
+            var lista = await _servicio.ObtenerPorMesaAsync(idMesa);
+            return Ok(lista);
         }
 
-        // ======================================================
-        // ELIMINAR VIDEO
-        // ======================================================
-        [HttpDelete("{idVideo}")]
-        public async Task<IActionResult> Eliminar(int idVideo)
+        // =============================================
+        // Obtener siguiente video a reproducir (bar)
+        // GET: api/VideoMesa/siguiente/3
+        // =============================================
+        [HttpGet("siguiente/{idBar:int}")]
+        public async Task<ActionResult<VideoMesaRespuestaDto>> ObtenerSiguiente(
+            int idBar)
         {
-            try
-            {
-                var resultado = await _videoMesaServicio.EliminarAsync(idVideo);
-                return Ok(resultado);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { mensaje = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { mensaje = ex.Message });
-            }
-        }
-
-
-        [HttpGet("siguiente/{idBar}")]
-        public async Task<IActionResult> ObtenerSiguiente(int idBar)
-        {
-            var video = await _videoMesaServicio.ObtenerSiguienteAsync(idBar);
+            var video = await _servicio.ObtenerSiguienteAsync(idBar);
 
             if (video == null)
-                return NoContent(); // No hay canciones pendientes en ese bar
+                return NoContent();
 
             return Ok(video);
         }
 
+        // =============================================
+        // Eliminar video
+        // DELETE: api/VideoMesa/10
+        // =============================================
+        [HttpDelete("{idVideo:int}")]
+        public async Task<IActionResult> Eliminar(int idVideo)
+        {
+            bool eliminado = await _servicio.EliminarAsync(idVideo);
 
+            if (!eliminado)
+                return NotFound();
 
+            return NoContent();
+        }
 
+        // =============================================
+        // Marcar video como reproduciendo
+        // PUT: api/VideoMesa/reproduciendo/10
+        // =============================================
+        [HttpPut("reproduciendo/{idVideo:int}")]
+        public async Task<IActionResult> MarcarComoReproduciendo(int idVideo)
+        {
+            bool actualizado = await _servicio.MarcarComoReproduciendoAsync(idVideo);
 
+            if (!actualizado)
+                return NotFound();
 
-
+            return NoContent();
+        }
     }
 }

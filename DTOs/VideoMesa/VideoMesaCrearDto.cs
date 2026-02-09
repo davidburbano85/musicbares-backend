@@ -1,18 +1,12 @@
 ﻿namespace MusicBares.DTOs.VideoMesa
 {
-    // ======================================================
-    // DTO usado para solicitar un video desde una mesa
-    // ======================================================
     public class VideoMesaCrearDto
     {
-        // ==========================================
-        // ID de la mesa que solicita el video
-        // ==========================================
         public int IdMesa { get; set; }
 
-        // ==========================================
-        // Link completo de YouTube enviado por el usuario
-        // ==========================================
+        /// <summary>
+        /// Link completo del video (YouTube u otro proveedor soportado)
+        /// </summary>
         public string LinkVideo { get; set; } = string.Empty;
     }
 }

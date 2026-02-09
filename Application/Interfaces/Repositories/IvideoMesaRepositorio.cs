@@ -8,8 +8,10 @@ namespace MusicBares.Application.Interfaces.Repositories
 
         Task<IEnumerable<VideoMesa>> ObtenerPorMesaAsync(int idMesa);
 
-        Task<VideoMesa?> ObtenerSiguienteAsync(int idBar);
+        Task<VideoMesa?> ObtenerSiguienteAsync(int IdBar);
 
         Task<bool> EliminarAsync(int idVideo);
+        Task<bool> MarcarComoReproduciendoAsync(int idVideo);
+
     }
 }

@@ -18,11 +18,14 @@ namespace MusicBares.Application.Interfaces.Servicios
         // Obtiene el siguiente video a reproducir
         // (rotación entre mesas del bar)
         // =============================================
-        Task<VideoMesaRespuestaDto?> ObtenerSiguienteAsync(int idBar);
+        Task<VideoMesaRespuestaDto?> ObtenerSiguienteAsync(int IdBar);
 
         // =============================================
         // Eliminación lógica (o cambio de estado)
         // =============================================
         Task<bool> EliminarAsync(int idVideo);
+
+        Task<bool> MarcarComoReproduciendoAsync(int idVideo);
+
     }
 }
