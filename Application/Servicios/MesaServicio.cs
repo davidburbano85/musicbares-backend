@@ -54,7 +54,7 @@ namespace MusicBares.Application.Servicios
             {
                 NumeroMesa = dto.NumeroMesa,
                 IdBar = dto.IdBar,
-                CodigoQr = dto.CodigoQr,
+                CodigoQR = dto.CodigoQR,
                 Estado = true
                 // FechaCreacion normalmente la pone la BD
             };
@@ -72,7 +72,7 @@ namespace MusicBares.Application.Servicios
                 IdMesa = idGenerado,
                 NumeroMesa = mesa.NumeroMesa,
                 IdBar = mesa.IdBar,
-                CodigoQr = mesa.CodigoQr,
+                CodigoQR = mesa.CodigoQR,
                 Estado = mesa.Estado,
                 FechaCreacion = DateTime.UtcNow
             };

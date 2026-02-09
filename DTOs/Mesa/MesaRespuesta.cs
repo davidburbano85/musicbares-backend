@@ -29,7 +29,7 @@
         // Código QR asociado a la mesa
         // Permite acceso directo del cliente
         // ----------------------------------------------
-        public string CodigoQr { get; set; } = string.Empty;
+        public string? CodigoQR { get; set; } 
 
         // ----------------------------------------------
         // Estado lógico de la mesa

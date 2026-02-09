@@ -23,8 +23,7 @@
         // Código QR asociado a la mesa
         // Puede actualizarse (ej: regenerar QR)
         // ----------------------------------------------
-        public string? CodigoQr { get; set; }
-
+        public string? CodigoQR { get; set; } 
         // ----------------------------------------------
         // Estado de la mesa
         // TRUE  = activa

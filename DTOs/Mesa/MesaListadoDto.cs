@@ -36,6 +36,6 @@
         // Código QR de la mesa
         // Generalmente se muestra como link o botón
         // ----------------------------------------------
-        public string? CodigoQr { get; set; }
+        public string? CodigoQR { get; set; }
     }
 }
