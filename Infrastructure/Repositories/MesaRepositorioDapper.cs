@@ -7,18 +7,12 @@ namespace MusicBares.Infrastructure.Repositories
 {
     // ======================================================
     // Repositorio Dapper para la entidad Mesa
-    // Encargado EXCLUSIVAMENTE del acceso a datos
+    // Acceso EXCLUSIVO a datos
     // ======================================================
     public class MesaRepositorioDapper : IMesaRepositorio
     {
-        // ----------------------------------------------
-        // Fábrica de conexiones a la base de datos
-        // ----------------------------------------------
         private readonly FabricaConexion _fabricaConexion;
 
-        // ----------------------------------------------
-        // Constructor con inyección de dependencias
-        // ----------------------------------------------
         public MesaRepositorioDapper(FabricaConexion fabricaConexion)
         {
             _fabricaConexion = fabricaConexion;
@@ -29,19 +23,16 @@ namespace MusicBares.Infrastructure.Repositories
         // ======================================================
         public async Task<int> CrearAsync(Mesa mesa)
         {
-            // Se crea y abre la conexión
             using var conexion = _fabricaConexion.CrearConexion();
 
-            // SQL para insertar una nueva mesa
             string sql = @"
                 INSERT INTO mesa
-                (numero_mesa, id_bar, codigo_qr, estado)
+                    (numero_mesa, id_bar, codigo_qr, estado)
                 VALUES
-                (@NumeroMesa, @IdBar, @CodigoQr, @Estado)
+                    (@NumeroMesa, @IdBar, @CodigoQR, @Estado)
                 RETURNING id_mesa;
             ";
 
-            // Ejecuta el INSERT y retorna el ID generado
             return await conexion.ExecuteScalarAsync<int>(sql, mesa);
         }
 
@@ -57,13 +48,12 @@ namespace MusicBares.Infrastructure.Repositories
                     id_mesa     AS IdMesa,
                     numero_mesa AS NumeroMesa,
                     id_bar      AS IdBar,
-                    codigo_qr   AS CodigoQr,
+                    codigo_qr   AS CodigoQR,
                     estado      AS Estado
                 FROM mesa
                 WHERE id_mesa = @idMesa;
             ";
 
-            // QueryFirstOrDefault devuelve null si no encuentra
             return await conexion.QueryFirstOrDefaultAsync<Mesa>(
                 sql,
                 new { idMesa }
@@ -82,17 +72,14 @@ namespace MusicBares.Infrastructure.Repositories
                     id_mesa     AS IdMesa,
                     numero_mesa AS NumeroMesa,
                     id_bar      AS IdBar,
-                    codigo_qr   AS CodigoQr,
+                    codigo_qr   AS CodigoQR,
                     estado      AS Estado
                 FROM mesa
                 WHERE id_bar = @idBar
-                AND estado = true;
+                  AND estado = true;
             ";
 
-            return await conexion.QueryAsync<Mesa>(
-                sql,
-                new { idBar }
-            );
+            return await conexion.QueryAsync<Mesa>(sql, new { idBar });
         }
 
         // ======================================================
@@ -107,11 +94,11 @@ namespace MusicBares.Infrastructure.Repositories
                     id_mesa     AS IdMesa,
                     numero_mesa AS NumeroMesa,
                     id_bar      AS IdBar,
-                    codigo_qr   AS CodigoQr,
+                    codigo_qr   AS CodigoQR,
                     estado      AS Estado
                 FROM mesa
                 WHERE codigo_qr = @codigoQR
-                AND estado = true;
+                  AND estado = true;
             ";
 
             return await conexion.QueryFirstOrDefaultAsync<Mesa>(
@@ -121,7 +108,7 @@ namespace MusicBares.Infrastructure.Repositories
         }
 
         // ======================================================
-        // VERIFICAR SI UNA MESA PERTENECE A UN BAR
+        // VALIDAR SI MESA PERTENECE A UN BAR
         // ======================================================
         public async Task<bool> ExisteMesaBarAsync(int idMesa, int idBar)
         {
@@ -131,7 +118,7 @@ namespace MusicBares.Infrastructure.Repositories
                 SELECT COUNT(1)
                 FROM mesa
                 WHERE id_mesa = @idMesa
-                AND id_bar = @idBar;
+                  AND id_bar  = @idBar;
             ";
 
             int cantidad = await conexion.ExecuteScalarAsync<int>(
@@ -143,7 +130,7 @@ namespace MusicBares.Infrastructure.Repositories
         }
 
         // ======================================================
-        // VERIFICAR SI EXISTE NÚMERO DE MESA EN UN BAR
+        // VALIDAR NÚMERO DE MESA REPETIDO EN UN BAR
         // ======================================================
         public async Task<bool> ExisteNumeroMesaAsync(int idBar, int numeroMesa)
         {
@@ -153,7 +140,7 @@ namespace MusicBares.Infrastructure.Repositories
                 SELECT COUNT(1)
                 FROM mesa
                 WHERE id_bar = @idBar
-                AND numero_mesa = @numeroMesa;
+                  AND numero_mesa = @numeroMesa;
             ";
 
             int cantidad = await conexion.ExecuteScalarAsync<int>(
@@ -175,18 +162,17 @@ namespace MusicBares.Infrastructure.Repositories
                 UPDATE mesa
                 SET
                     numero_mesa = @NumeroMesa,
-                    codigo_qr   = @CodigoQr,
+                    codigo_qr   = @CodigoQR,
                     estado      = @Estado
                 WHERE id_mesa = @IdMesa;
             ";
 
             int filas = await conexion.ExecuteAsync(sql, mesa);
-
             return filas > 0;
         }
 
         // ======================================================
-        // LISTAR TODAS LAS MESAS ACTIVAS
+        // LISTAR MESAS ACTIVAS
         // ======================================================
         public async Task<IEnumerable<Mesa>> ListarAsync()
         {
@@ -197,7 +183,7 @@ namespace MusicBares.Infrastructure.Repositories
                     id_mesa     AS IdMesa,
                     numero_mesa AS NumeroMesa,
                     id_bar      AS IdBar,
-                    codigo_qr   AS CodigoQr,
+                    codigo_qr   AS CodigoQR,
                     estado      AS Estado
                 FROM mesa
                 WHERE estado = true;
