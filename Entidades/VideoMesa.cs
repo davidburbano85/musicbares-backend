@@ -1,55 +1,51 @@
 ﻿namespace MusicBares.Entidades
 {
-    /// <summary>
-    /// Representa una solicitud de video realizada desde una mesa.
-    /// 
-    /// Permite registrar canciones enviadas por clientes mediante
-    /// enlaces de YouTube.
-    /// 
-    /// Esta entidad pertenece al Dominio del negocio.
-    /// </summary>
+    // ======================================================
+    // Entidad: VideosMesa
+    // Representa una solicitud de video realizada desde una mesa
+    // ======================================================
     public class VideoMesa
     {
-        /// <summary>
-        /// Identificador único del registro del video.
-        /// Generado por la base de datos.
-        /// </summary>
-        public int Id { get; set; }
+        // ==========================================
+        // Clave primaria autoincremental
+        // Corresponde a: id_video
+        // ==========================================
+        public int IdVideo { get; set; }
 
-        /// <summary>
-        /// Identificador de la mesa que solicitó el video.
-        /// 
-        /// Relación jerárquica:
-        /// Mesa → VideoMesa
-        /// </summary>
+        // ==========================================
+        // Clave foránea hacia la mesa
+        // Relación: videos_mesa → mesa
+        // ==========================================
         public int IdMesa { get; set; }
 
-        /// <summary>
-        /// Enlace completo del video enviado por el cliente.
-        /// </summary>
+        // ==========================================
+        // Link completo del video de YouTube
+        // Ejemplo:
+        // https://www.youtube.com/watch?v=ABC123
+        // ==========================================
         public string LinkVideo { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Identificador único del video dentro de YouTube.
-        /// 
-        /// Este valor se extrae automáticamente desde el enlace.
-        /// </summary>
+        // ==========================================
+        // ID limpio del video de YouTube
+        // Este valor NO lo genera C#
+        // Lo genera PostgreSQL con la función:
+        // extraer_id_youtube(link_video)
+        // ==========================================
         public string IdVideoYoutube { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Fecha y hora en la que se solicitó el video.
-        /// </summary>
+        // ==========================================
+        // Fecha y hora en la que se solicitó el video
+        // Normalmente la asigna la base de datos (NOW())
+        // ==========================================
         public DateTime FechaSolicitud { get; set; }
 
-        /// <summary>
-        /// Estado actual del video dentro del flujo de reproducción.
-        /// 
-        /// Ejemplo:
-        /// - Pendiente
-        /// - Reproduciendo
-        /// - Finalizado
-        /// </summary>
-        public string EstadoReproduccion { get; set; } = string.Empty;
+        // ==========================================
+        // Estado actual del video en la cola
+        // Valores típicos:
+        // - Pendiente
+        // - Reproduciendo
+        // - Finalizado
+        // ==========================================
+        public string? EstadoReproduccion { get; set; } 
     }
 }
-

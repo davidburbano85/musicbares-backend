@@ -24,7 +24,7 @@
         // - null (si se genera después)
         // - string con URL / hash
         // ----------------------------------------------
-        public string? CodigoQR { get; set; } = string.Empty;
+        public string? CodigoQR { get; set; }
 
         // ----------------------------------------------
         // Estado inicial de la mesa
