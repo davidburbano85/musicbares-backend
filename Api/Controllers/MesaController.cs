@@ -5,94 +5,133 @@ using MusicBares.DTOs.Mesa;
 namespace MusicBares.API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/mesa")]
     public class MesaController : ControllerBase
     {
-        // ----------------------------------------------
-        // Servicio de mesas (lógica de negocio)
-        // ----------------------------------------------
+        // ==========================================
+        // Servicio de mesa (lógica de negocio)
+        // ==========================================
         private readonly IMesaServicio _mesaServicio;
 
-        // ----------------------------------------------
-        // Constructor
-        // ----------------------------------------------
+        // ==========================================
+        // Constructor con inyección de dependencias
+        // ==========================================
         public MesaController(IMesaServicio mesaServicio)
         {
             _mesaServicio = mesaServicio;
         }
 
-        // ======================================================
-        // CREAR MESA
-        // POST: api/mesa
-        // ======================================================
+        // ==========================================
+        // Crear una nueva mesa
+        // ==========================================
         [HttpPost]
         public async Task<IActionResult> Crear([FromBody] MesaCrearDto dto)
         {
-            var resultado = await _mesaServicio.CrearAsync(dto);
-            return Ok(resultado);
+            try
+            {
+                var resultado = await _mesaServicio.CrearAsync(dto);
+                return Ok(resultado);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno al crear la mesa: {ex.Message}");
+            }
         }
 
-        // ======================================================
-        // OBTENER MESA POR ID
-        // GET: api/mesa/5
-        // ======================================================
-        [HttpGet("{idMesa:int}")]
+        // ==========================================
+        // Obtener mesa por ID
+        // ==========================================
+        [HttpGet("{idMesa}")]
         public async Task<IActionResult> ObtenerPorId(int idMesa)
         {
-            var mesa = await _mesaServicio.ObtenerPorIdAsync(idMesa);
+            try
+            {
+                var mesa = await _mesaServicio.ObtenerPorIdAsync(idMesa);
 
-            if (mesa == null)
-                return NotFound("La mesa no existe.");
+                if (mesa == null)
+                    return NotFound("Mesa no encontrada");
 
-            return Ok(mesa);
+                return Ok(mesa);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno al obtener la mesa: {ex.Message}");
+            }
         }
 
-        // ======================================================
-        // OBTENER MESAS POR BAR
-        // GET: api/mesa/bar/3
-        // ======================================================
-        [HttpGet("bar/{idBar:int}")]
-        public async Task<IActionResult> ObtenerPorBar(int idBar)
-        {
-            var mesas = await _mesaServicio.ObtenerPorBarAsync(idBar);
-            return Ok(mesas);
-        }
-
-        // ======================================================
-        // OBTENER MESA POR CÓDIGO QR (flujo público)
-        // GET: api/mesa/qr/ABC123
-        // ======================================================
-        [HttpGet("qr/{codigoQR}")]
-        public async Task<IActionResult> ObtenerPorCodigoQR(string codigoQR)
-        {
-            var mesa = await _mesaServicio.ObtenerPorCodigoQRAsync(codigoQR);
-
-            if (mesa == null)
-                return NotFound("Mesa no encontrada.");
-
-            return Ok(mesa);
-        }
-
-        // ======================================================
-        // ACTUALIZAR MESA
-        // PUT: api/mesa
-        // ======================================================
-        [HttpPut]
-        public async Task<IActionResult> Actualizar([FromBody] MesaActualizarDto dto)
-        {
-            var resultado = await _mesaServicio.ActualizarAsync(dto);
-            return Ok(resultado);
-        }
-
-        // ======================================================
-        // LISTAR TODAS LAS MESAS ACTIVAS (ADMIN)
-        // GET: api/mesa
-        // ======================================================
+        // ==========================================
+        // Listar todas las mesas (administrativo)
+        // ==========================================
         [HttpGet]
         public async Task<IActionResult> Listar()
         {
-            var mesas = await _mesaServicio.ListarAsync();
-            return Ok(mesas);
+            try
+            {
+                var mesas = await _mesaServicio.ListarAsync();
+                return Ok(mesas);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno al listar mesas: {ex.Message}");
+            }
+        }
+
+        // ==========================================
+        // Obtener mesas por bar
+        // ==========================================
+        [HttpGet("bar/{idBar}")]
+        public async Task<IActionResult> ObtenerPorBar(int idBar)
+        {
+            try
+            {
+                var mesas = await _mesaServicio.ObtenerPorBarAsync(idBar);
+                return Ok(mesas);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno al obtener mesas del bar: {ex.Message}");
+            }
+        }
+
+        // ==========================================
+        // Obtener mesa por código QR
+        // ==========================================
+        [HttpGet("qr/{codigoQR}")]
+        public async Task<IActionResult> ObtenerPorCodigoQR(string codigoQR)
+        {
+            try
+            {
+                var mesa = await _mesaServicio.ObtenerPorCodigoQRAsync(codigoQR);
+
+                if (mesa == null)
+                    return NotFound("Mesa no encontrada");
+
+                return Ok(mesa);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno al obtener mesa por QR: {ex.Message}");
+            }
+        }
+
+        // ==========================================
+        // Actualizar mesa
+        // ==========================================
+        [HttpPut("{idMesa}")]
+        public async Task<IActionResult> Actualizar(int idMesa, [FromBody] MesaActualizarDto dto)
+        {
+            try
+            {
+                if (idMesa != dto.IdMesa)
+                    return BadRequest("El id de la mesa no coincide.");
+
+                var resultado = await _mesaServicio.ActualizarAsync(dto);
+                return Ok(resultado);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno al actualizar la mesa: {ex.Message}");
+            }
         }
     }
 }

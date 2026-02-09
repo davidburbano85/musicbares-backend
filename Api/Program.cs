@@ -19,6 +19,8 @@ builder.Services.AddScoped<IBarServicio, BarServicio>();
 
 builder.Services.AddScoped<IUsuarioRepositorio, UsuarioRepositorioDapper>();
 builder.Services.AddScoped<IUsuarioServicio, UsuarioServicio>();
+builder.Services.AddScoped<IMesaRepositorio, MesaRepositorioDapper>();
+builder.Services.AddScoped<IMesaServicio, MesaServicio>();
 
 
 
