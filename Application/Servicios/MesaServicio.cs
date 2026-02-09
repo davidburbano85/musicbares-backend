@@ -102,7 +102,7 @@ namespace MusicBares.Application.Servicios
                 IdMesa = mesa.IdMesa,
                 NumeroMesa = mesa.NumeroMesa,
                 IdBar = mesa.IdBar,
-                CodigoQr = mesa.CodigoQr,
+                CodigoQR = mesa.CodigoQR,
                 Estado = mesa.Estado,
             };
         }
@@ -152,7 +152,7 @@ namespace MusicBares.Application.Servicios
                 IdMesa = mesa.IdMesa,
                 NumeroMesa = mesa.NumeroMesa,
                 IdBar = mesa.IdBar,
-                CodigoQr = mesa.CodigoQr,
+                CodigoQR = mesa.CodigoQR,
                 Estado = mesa.Estado,
             };
         }
@@ -189,7 +189,7 @@ namespace MusicBares.Application.Servicios
                 IdMesa = mesa.IdMesa,
                 NumeroMesa = mesa.NumeroMesa,
                 IdBar = mesa.IdBar,
-                CodigoQr = mesa.CodigoQr,
+                CodigoQR = mesa.CodigoQR,
                 Estado = mesa.Estado,
             };
         }
@@ -205,7 +205,9 @@ namespace MusicBares.Application.Servicios
             {
                 IdMesa = m.IdMesa,
                 NumeroMesa = m.NumeroMesa,
-                Estado = m.Estado
+                Estado = m.Estado,
+                IdBar= m.IdBar,
+                CodigoQR= m.CodigoQR,
             });
         }
     }
