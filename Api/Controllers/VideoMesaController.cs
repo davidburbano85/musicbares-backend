@@ -84,5 +84,16 @@ namespace MusicBares.API.Controllers
 
             return NoContent();
         }
+
+        // NUEVO: Cola completa round-robin por bar
+        // GET: api/VideoMesa/cola/{idBar}
+        // ======================================================
+        [HttpGet("cola/{idBar:int}")]
+        public async Task<ActionResult<IEnumerable<VideoMesaListadoDto>>> ObtenerColaRoundRobin(
+            int idBar)
+        {
+            var cola = await _servicio.ObtenerColaRoundRobinAsync(idBar);
+            return Ok(cola);
+        }
     }
 }

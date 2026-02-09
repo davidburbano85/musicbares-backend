@@ -21,6 +21,11 @@ namespace MusicBares.Application.Interfaces.Servicios
         Task<VideoMesaRespuestaDto?> ObtenerSiguienteAsync(int IdBar);
 
         // =============================================
+        // NUEVO: cola completa round-robin por bar
+        // =============================================
+        Task<IEnumerable<VideoMesaListadoDto>> ObtenerColaRoundRobinAsync(int idBar);
+
+        // =============================================
         // Eliminación lógica (o cambio de estado)
         // =============================================
         Task<bool> EliminarAsync(int idVideo);

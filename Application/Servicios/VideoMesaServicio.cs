@@ -92,5 +92,21 @@ namespace MusicBares.Application.Servicios
         {
             return await _repositorio.MarcarComoReproduciendoAsync(idVideo);
         }
+        // NUEVO: cola completa round-robin por bar
+        // ======================================================
+        public async Task<IEnumerable<VideoMesaListadoDto>> ObtenerColaRoundRobinAsync(int idBar)
+        {
+            var videos = await _repositorio.ObtenerColaRoundRobinAsync(idBar);
+
+            return videos.Select(v => new VideoMesaListadoDto
+            {
+                IdVideo = v.IdVideo,
+                LinkVideo = v.LinkVideo,
+                IdVideoYoutube = v.IdVideoYoutube,
+                FechaSolicitud = v.FechaSolicitud,
+                EstadoReproduccion = v.EstadoReproduccion
+            });
+        }
+
     }
 }

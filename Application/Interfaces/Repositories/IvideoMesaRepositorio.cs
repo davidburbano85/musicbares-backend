@@ -12,6 +12,12 @@ namespace MusicBares.Application.Interfaces.Repositories
 
         Task<bool> EliminarAsync(int idVideo);
         Task<bool> MarcarComoReproduciendoAsync(int idVideo);
+        // ======================================================
+        // NUEVO: cola completa round-robin por bar
+        // ======================================================
+        Task<IEnumerable<VideoMesa>> ObtenerColaRoundRobinAsync(int idBar);
+       
+        Task<bool> CambiarEstadoAsync(int idVideo, string nuevoEstado);
 
     }
 }

@@ -132,8 +132,7 @@ namespace MusicBares.Infrastructure.Repositories
             using var conexion = _fabricaConexion.CrearConexion();
 
             string sql = @"
-                    WITH videos_ordenados AS (
-
+                   WITH videos_ordenados AS (
                         SELECT
                             vm.id_video            AS IdVideo,
                             vm.id_mesa             AS IdMesa,
@@ -142,10 +141,6 @@ namespace MusicBares.Infrastructure.Repositories
                             vm.fecha_solicitud     AS FechaSolicitud,
                             vm.estado_reproduccion AS EstadoReproduccion,
 
-                            -- ---------------------------------------------
-                            -- ROW_NUMBER:
-                            -- Numera los videos de CADA mesa desde el más antiguo
-                            -- ---------------------------------------------
                             ROW_NUMBER() OVER (
                                 PARTITION BY vm.id_mesa
                                 ORDER BY vm.fecha_solicitud
@@ -158,16 +153,12 @@ namespace MusicBares.Infrastructure.Repositories
                             AND m.id_bar = @idBar
                     )
 
-                    -- ---------------------------------------------
-                    -- Round-robin real entre mesas
-                    -- ---------------------------------------------
                     SELECT *
                     FROM videos_ordenados
                     ORDER BY
-                        turno_mesa,  -- primero todas las mesas con su video 1
-                        id_mesa
-                    LIMIT 1;
-                ";
+                        turno_mesa,   -- 1º video de cada mesa
+                        id_mesa;      -- orden estable
+                                    ";
 
             return await conexion.QueryFirstOrDefaultAsync<VideoMesa>(
                 sql,
@@ -194,6 +185,44 @@ namespace MusicBares.Infrastructure.Repositories
             return filas > 0;
         }
 
+        public async Task<IEnumerable<VideoMesa>> ObtenerColaRoundRobinAsync(int idBar)
+        {
+            using var conexion = _fabricaConexion.CrearConexion();
+
+            string sql = @"
+                    WITH videos_ordenados AS (
+                        SELECT
+                            vm.id_video            AS IdVideo,
+                            vm.id_mesa             AS IdMesa,
+                            vm.link_video          AS LinkVideo,
+                            vm.id_video_youtube    AS IdVideoYoutube,
+                            vm.fecha_solicitud     AS FechaSolicitud,
+                            vm.estado_reproduccion AS EstadoReproduccion,
+
+                            ROW_NUMBER() OVER (
+                                PARTITION BY vm.id_mesa
+                                ORDER BY vm.fecha_solicitud
+                            ) AS turno_mesa
+
+                        FROM videos_mesa vm
+                        INNER JOIN mesa m ON m.id_mesa = vm.id_mesa
+                        WHERE
+                            vm.estado_reproduccion = 'Pendiente'
+                            AND m.id_bar = @idBar
+                    )
+
+                    SELECT *
+                    FROM videos_ordenados
+                    ORDER BY
+                        turno_mesa,
+                        id_mesa;
+                ";
+
+            return await conexion.QueryAsync<VideoMesa>(
+                sql,
+                new { idBar }
+            );
+        }
 
 
     }
