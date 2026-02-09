@@ -17,7 +17,7 @@ public interface IMesaRepositorio
 
     // Obtiene una mesa usando su código QR
     // Permite que clientes accedan directamente a la mesa
-    Task<Mesa?> ObtenerPorCodigoQRAsync(string codigoQR);
+    Task<Mesa?> ObtenerPorCodigoQRAsync(string CodigoQR);
 
     // Verifica si una mesa pertenece a un bar específico
     // Se usa para reforzar validaciones multi-tenant

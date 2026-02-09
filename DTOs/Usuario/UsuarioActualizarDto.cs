@@ -11,6 +11,7 @@
 
         // Nuevo correo del usuario
         public string CorreoElectronico { get; set; } = string.Empty;
+        //cuando quieras cambiar el correo
         public string CorreoElectronicoNuevo { get; set; } = string.Empty;
 
 

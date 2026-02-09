@@ -36,7 +36,7 @@
         /// Código QR opcional que permite a los clientes acceder
         /// directamente al sistema de solicitudes desde la mesa.
         /// </summary>
-        public string? CodigoQR { get; set; }
+        public string? CodigoQr { get; set; }
 
         /// <summary>
         /// Indica si la mesa está activa dentro del sistema.

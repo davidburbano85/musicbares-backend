@@ -67,31 +67,10 @@ namespace MusicBares.API.Controllers
         }
 
 
-        // 🔹 Actualizar usuario
-        //[HttpPut("{idUsuario:int}")]
-        //public async Task<IActionResult> Actualizar(int idUsuario,[FromBody] UsuarioActualizarDto dto)
-        //{
-        //    try
-        //    {
-        //        if (idUsuario != dto.IdUsuario)
-        //            return BadRequest("el id no existe.");
-        //        var resultado = await _usuarioServicio.ActualizarAsync(dto);
-
-        //        if (!resultado.Exitoso)
-        //            return BadRequest(resultado);
-
-        //        return Ok(resultado);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return StatusCode(500, $"Error interno al actualizar el bar: {ex.Message}");
-        //    }
-        //}
+       //Actualizar con Correo electronico
 
         [HttpPut("{correoElectronico}")]
-        public async Task<IActionResult> Actualizar(
-        string correoElectronico,
-        [FromBody] UsuarioActualizarDto dto)
+        public async Task<IActionResult> Actualizar(string correoElectronico,[FromBody] UsuarioActualizarDto dto)
             {
                 try
                 {
