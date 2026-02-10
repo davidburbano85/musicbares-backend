@@ -20,14 +20,16 @@ namespace MusicBares.Application.Servicios
             _usuarioActualServicio = usuarioActualServicio;
         }
 
-        /// <summary>
         /// Crea un nuevo bar en el sistema.
-        /// </summary>
         public async Task<BarRespuestaDto> CrearAsync(BarCrearDto dto)
         {
             try
             {
-                // Validación básica
+                // ======================================================
+                // VALIDACIONES BÁSICAS
+                // ======================================================
+
+                // Validamos que el nombre del bar no esté vacío
                 if (string.IsNullOrWhiteSpace(dto.NombreBar))
                     return new BarRespuestaDto
                     {
@@ -35,6 +37,7 @@ namespace MusicBares.Application.Servicios
                         Mensaje = "El nombre del bar es obligatorio"
                     };
 
+                // Validamos que la dirección no esté vacía
                 if (string.IsNullOrWhiteSpace(dto.Direccion))
                     return new BarRespuestaDto
                     {
@@ -42,17 +45,52 @@ namespace MusicBares.Application.Servicios
                         Mensaje = "La dirección es obligatoria"
                     };
 
-                // Mapping DTO → Entidad
+                // ======================================================
+                // OBTENER USUARIO AUTENTICADO DESDE JWT
+                // ======================================================
+
+                // Ya NO confiamos en dto.IdUsuario (por seguridad)
+                // Se obtiene directamente del token del usuario logueado
+                int idUsuario = await _usuarioActualServicio.ObtenerIdUsuarioAsync();
+
+                // ======================================================
+                // VALIDAR REGLA: UN USUARIO SOLO PUEDE TENER UN BAR
+                // ======================================================
+
+                // Consultamos si el usuario ya tiene bar registrado
+                var baresUsuario = await _barRepositorio.ObtenerPorUsuarioAsync(idUsuario);
+
+                if (baresUsuario.Any())
+                    return new BarRespuestaDto
+                    {
+                        Exitoso = false,
+                        Mensaje = "El usuario ya tiene un bar registrado"
+                    };
+
+                // ======================================================
+                // MAPPING DTO → ENTIDAD
+                // ======================================================
+
                 var bar = new Bar
                 {
                     NombreBar = dto.NombreBar,
                     Direccion = dto.Direccion,
-                    IdUsuario = dto.IdUsuario,
+
+                    // Se asigna el usuario autenticado automáticamente
+                    IdUsuario = idUsuario,
+
                     Estado = true
                 };
 
-                // Guardar en BD
+                // ======================================================
+                // GUARDAR EN BASE DE DATOS
+                // ======================================================
+
                 await _barRepositorio.CrearAsync(bar);
+
+                // ======================================================
+                // RESPUESTA EXITOSA
+                // ======================================================
 
                 return new BarRespuestaDto
                 {
@@ -62,6 +100,10 @@ namespace MusicBares.Application.Servicios
             }
             catch (Exception ex)
             {
+                // ======================================================
+                // MANEJO DE ERRORES CONTROLADO
+                // ======================================================
+
                 return new BarRespuestaDto
                 {
                     Exitoso = false,
@@ -69,9 +111,9 @@ namespace MusicBares.Application.Servicios
                 };
             }
         }
-        /// <summary>
+
+
         /// Obtiene un bar específico por su identificador.
-        /// </summary>
         public async Task<BarListadoDto?> ObtenerPorIdAsync(int idBar)
         {
             try
