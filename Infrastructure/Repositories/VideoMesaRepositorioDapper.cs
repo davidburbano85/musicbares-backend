@@ -157,7 +157,7 @@ namespace MusicBares.Infrastructure.Repositories
                     FROM videos_ordenados
                     ORDER BY
                         turno_mesa,   -- 1º video de cada mesa
-                        id_mesa;      -- orden estable
+                        IdMesa;      -- orden estable
                                     ";
 
             return await conexion.QueryFirstOrDefaultAsync<VideoMesa>(
@@ -215,7 +215,7 @@ namespace MusicBares.Infrastructure.Repositories
                     FROM videos_ordenados
                     ORDER BY
                         turno_mesa,
-                        id_mesa;
+                        IdMesa;
                 ";
 
             return await conexion.QueryAsync<VideoMesa>(
