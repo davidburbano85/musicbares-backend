@@ -30,6 +30,7 @@ public interface IBarRepositorio
     Task<bool> EliminarAsync(int idBar);
     Task<bool> ReactivarAsync(int idBar);
 
-
+    // Obtiene el bar perteneciente a un usuario
+    Task<Bar?> ObtenerBarPorUsuarioIdAsync(int idUsuario);
 
 }

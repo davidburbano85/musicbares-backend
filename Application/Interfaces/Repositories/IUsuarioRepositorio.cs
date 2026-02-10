@@ -21,4 +21,7 @@ public interface IUsuarioRepositorio
 
     // Cambia estado del usuario a TRUE (reactivar usuario)
     Task<bool> ReactivarAsync(int idUsuario);
+
+    // Método que busca un usuario usando el auth_user_id proveniente de Supabase
+    Task<Usuario?> ObtenerPorAuthIdAsync(Guid authUserId);
 }

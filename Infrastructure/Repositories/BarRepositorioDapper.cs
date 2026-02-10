@@ -142,22 +142,7 @@ namespace MusicBares.Infrastructure.Repositories
             return filasAfectadas > 0;
         }
 
-        //public async Task<bool> ReactivarAsync(int idBar)
-        //{
-        //    using var conexion = _fabricaConexion.CrearConexion();
-
-        //    string sql = @"
-        //        UPDATE bar
-        //        SET estado = TRUE
-        //        WHERE id_bar = @idBar
-        //    ";
-
-        //    var filas = await conexion.ExecuteAsync(sql, new { idBar });
-
-        //    return filas > 0;
-        //}
-
-        public async Task<bool> ReactivarAsync(int idBar)
+       public async Task<bool> ReactivarAsync(int idBar)
         {
             Console.WriteLine("🔥 ENTRO AL REPOSITORIO");
 
@@ -178,7 +163,33 @@ namespace MusicBares.Infrastructure.Repositories
         }
 
 
+        // Obtiene el bar activo asociado a un usuario
+        public async Task<Bar?> ObtenerBarPorUsuarioIdAsync(int idUsuario)
+        {
+            // Crea conexión a PostgreSQL
+            using var conexion = _fabricaConexion.CrearConexion();
 
+            // Consulta que obtiene el bar activo del usuario
+            string sql = @"
+                    SELECT 
+                        id_bar AS IdBar,
+                        nombre_bar AS NombreBar,
+                        direccion AS Direccion,
+                        id_usuario AS IdUsuario,
+                        estado AS Estado,
+                        fecha_registro AS FechaRegistro
+                    FROM bar
+                    WHERE id_usuario = @idUsuario
+                    AND estado = true
+                    LIMIT 1;
+                ";
+
+            // Ejecuta consulta y retorna el bar o null
+            return await conexion.QueryFirstOrDefaultAsync<Bar>(
+                sql,
+                new { idUsuario }
+            );
+        }
 
     }
 }

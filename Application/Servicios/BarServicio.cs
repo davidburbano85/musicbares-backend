@@ -11,10 +11,13 @@ namespace MusicBares.Application.Servicios
     public class BarServicio : IBarServicio
     {
         private readonly IBarRepositorio _barRepositorio;
-
-        public BarServicio(IBarRepositorio barRepositorio)
+        // Servicio que permite obtener usuario autenticado desde JWT
+        private readonly IUsuarioActualServicio _usuarioActualServicio;
+        public BarServicio(IBarRepositorio barRepositorio,
+            IUsuarioActualServicio usuarioActualServicio )
         {
             _barRepositorio = barRepositorio;
+            _usuarioActualServicio = usuarioActualServicio;
         }
 
         /// <summary>
@@ -282,6 +285,9 @@ namespace MusicBares.Application.Servicios
                 Mensaje = "Bar reactivado correctamente"
             };
         }
+
+
+
 
     }
 }

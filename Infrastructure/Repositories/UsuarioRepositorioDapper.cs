@@ -178,8 +178,29 @@ namespace MusicBares.Infrastructure.Repositories
 
             return filas > 0;
         }
-    
-    
-    
+
+        // Busca usuario usando auth_user_id
+        public async Task<Usuario?> ObtenerPorAuthIdAsync(Guid authUserId)
+        {
+            // Consulta SQL para buscar usuario por auth_user_id
+            var sql = @"
+                SELECT *
+                FROM usuario
+                WHERE auth_user_id = @AuthUserId
+            ";
+
+            // Abre una conexión usando la fábrica
+            using var conexion = _fabricaConexion.CrearConexion();
+
+            // Ejecuta la consulta y mapea el resultado a la entidad Usuario
+            var usuario = await conexion.QueryFirstOrDefaultAsync<Usuario>(
+                sql,
+                new { AuthUserId = authUserId } // Parámetro seguro contra SQL Injection
+            );
+
+            // Retorna el usuario encontrado o null
+            return usuario;
+        }
+
     }
 }

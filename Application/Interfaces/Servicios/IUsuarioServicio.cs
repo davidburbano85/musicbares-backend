@@ -1,4 +1,5 @@
 ﻿using MusicBares.DTOs.Usuario;
+using MusicBares.Entidades;
 
 namespace MusicBares.Application.Interfaces.Servicios
 {
@@ -25,5 +26,8 @@ namespace MusicBares.Application.Interfaces.Servicios
 
         // Reactivar usuario
         Task<UsuarioRespuestaDto> ReactivarAsync(int idUsuario);
+
+        // Obtiene usuario usando auth_user_id
+        Task<Usuario?> ObtenerPorAuthIdAsync(Guid authUserId);
     }
 }

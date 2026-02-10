@@ -1,11 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MusicBares.Application.Interfaces.Servicios;
 using MusicBares.DTOs.Bar;
+using Microsoft.AspNetCore.Authorization;
 
 namespace MusicBares.API.Controllers
 {
     [ApiController]
     [Route("api/bar")]
+
+    [Authorize]
     public class BarController : ControllerBase
     {
         private readonly IBarServicio _barServicio;
