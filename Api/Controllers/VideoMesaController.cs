@@ -29,42 +29,37 @@ namespace MusicBares.API.Controllers
         // ============================================================
         [HttpPost("registrar-multiples")]
         public async Task<IActionResult> RegistrarMultiplesVideos(
-            [FromBody] int idMesa,
-            [FromBody] List<string> links)
+      [FromBody] VideoMesaMultipleDto request)
         {
             try
             {
-                // Validación: Mesa válida
-                if (idMesa <= 0)
+                if (request == null)
+                    return BadRequest("Body requerido.");
+
+                if (request.IdMesa <= 0)
                     return BadRequest("IdMesa inválido.");
 
-                // Validación: Debe haber links
-                if (links == null || !links.Any())
-                    return BadRequest("Debe enviar al menos un link.");
+                if (!request.Links.Any())
+                    return BadRequest("Debe enviar links.");
 
                 var resultados = new List<VideoMesaRespuestaDto>();
 
-                // Iteramos cada link para crear solicitudes independientes
-                foreach (var link in links)
+                foreach (var link in request.Links)
                 {
-                    // Validación básica formato YouTube
                     if (!EsUrlYoutubeValida(link))
                         return BadRequest($"Link inválido: {link}");
 
-                    // Construimos DTO de creación
                     var dto = new VideoMesaCrearDto
                     {
-                        IdMesa = idMesa,
+                        IdMesa = request.IdMesa,
                         LinkVideo = link
                     };
 
-                    // Delegamos creación al servicio
-                    var resultado = await _servicio.CrearAsync(dto);
+                    var creado = await _servicio.CrearAsync(dto);
 
-                    resultados.Add(resultado);
+                    resultados.Add(creado);
                 }
 
-                // Respuesta HTTP 201
                 return Created("", resultados);
             }
             catch (Exception ex)
