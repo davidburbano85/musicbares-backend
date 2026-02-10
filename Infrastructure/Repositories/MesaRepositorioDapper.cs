@@ -191,5 +191,22 @@ namespace MusicBares.Infrastructure.Repositories
 
             return await conexion.QueryAsync<Mesa>(sql);
         }
+
+        public async Task<bool> ExisteMesaAsync(int idMesa)
+        {
+            using var conexion = _fabricaConexion.CrearConexion();
+
+            var sql = @"
+                SELECT EXISTS (
+                    SELECT 1
+                    FROM mesa
+                    WHERE id_mesa = @IdMesa
+                );
+            ";
+
+            return await conexion.ExecuteScalarAsync<bool>(sql, new { IdMesa = idMesa });
+        }
+
+
     }
 }
