@@ -19,5 +19,6 @@ namespace MusicBares.Application.Interfaces.Repositories
        
         Task<bool> CambiarEstadoAsync(int idVideo, string nuevoEstado);
 
+
     }
 }

@@ -32,4 +32,6 @@ public interface IMesaRepositorio
 
     // Lista todas las mesas activas del sistema
     Task<IEnumerable<Mesa>> ListarAsync();
+    Task<bool> ExisteMesaAsync(int idMesa);
+
 }

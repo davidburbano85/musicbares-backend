@@ -32,5 +32,6 @@ namespace MusicBares.Application.Interfaces.Servicios
 
         Task<bool> MarcarComoReproduciendoAsync(int idVideo);
 
+
     }
 }

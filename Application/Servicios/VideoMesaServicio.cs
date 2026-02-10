@@ -7,11 +7,26 @@ namespace MusicBares.Application.Servicios
 {
     public class VideoMesaServicio : IVideoMesaServicio
     {
+        // ======================================================
+        // Repositorio de videos
+        // ======================================================
         private readonly IVideoMesaRepositorio _repositorio;
 
-        public VideoMesaServicio(IVideoMesaRepositorio repositorio)
+        // ======================================================
+        // Repositorio de mesas (nuevo)
+        // Permite validar existencia y ownership
+        // ======================================================
+        private readonly IMesaRepositorio _mesaRepositorio;
+
+        // ======================================================
+        // Constructor con inyección de dependencias
+        // ======================================================
+        public VideoMesaServicio(
+            IVideoMesaRepositorio repositorio,
+            IMesaRepositorio mesaRepositorio)
         {
             _repositorio = repositorio;
+            _mesaRepositorio = mesaRepositorio;
         }
 
         // =============================================
@@ -19,22 +34,48 @@ namespace MusicBares.Application.Servicios
         // =============================================
         public async Task<VideoMesaRespuestaDto> CrearAsync(VideoMesaCrearDto dto)
         {
+            // --------------------------------------------------
+            // Validación 1: Verificar que la mesa exista
+            // --------------------------------------------------
+            bool mesaExiste = await _mesaRepositorio.ExisteMesaAsync(dto.IdMesa);
+
+            if (!mesaExiste)
+                throw new ArgumentException("La mesa especificada no existe.");
+
+            // --------------------------------------------------
+            // Validación futura (multi-tenant seguridad)
+            // Aquí luego validaremos si la mesa pertenece
+            // al bar del usuario autenticado
+            // --------------------------------------------------
+
+            // --------------------------------------------------
+            // Construcción de entidad dominio
+            // --------------------------------------------------
             var entidad = new VideoMesa
             {
                 IdMesa = dto.IdMesa,
                 LinkVideo = dto.LinkVideo
             };
 
+            // --------------------------------------------------
+            // Persistencia
+            // --------------------------------------------------
             int idVideo = await _repositorio.CrearAsync(entidad);
 
-            // No usamos ObtenerPorIdAsync porque NO está en la interface
+            // --------------------------------------------------
+            // Retorno DTO respuesta
+            // --------------------------------------------------
             return new VideoMesaRespuestaDto
             {
                 IdVideo = idVideo,
                 IdMesa = dto.IdMesa,
                 LinkVideo = dto.LinkVideo,
-                IdVideoYoutube = null,           // lo completa SQL luego
-                FechaSolicitud = DateTime.UtcNow, // valor informativo
+
+                // Este valor lo genera el trigger SQL
+                IdVideoYoutube = null,
+
+                // Valor informativo (no exacto)
+                FechaSolicitud = DateTime.UtcNow,
                 EstadoReproduccion = "Pendiente"
             };
         }
@@ -49,6 +90,7 @@ namespace MusicBares.Application.Servicios
             return videos.Select(v => new VideoMesaListadoDto
             {
                 IdVideo = v.IdVideo,
+                IdMesa = v.IdMesa,
                 LinkVideo = v.LinkVideo,
                 IdVideoYoutube = v.IdVideoYoutube,
                 FechaSolicitud = v.FechaSolicitud,
@@ -59,9 +101,9 @@ namespace MusicBares.Application.Servicios
         // =============================================
         // Obtener siguiente video (round-robin por bar)
         // =============================================
-        public async Task<VideoMesaRespuestaDto?> ObtenerSiguienteAsync(int IdBar)
+        public async Task<VideoMesaRespuestaDto?> ObtenerSiguienteAsync(int idBar)
         {
-            var video = await _repositorio.ObtenerSiguienteAsync(IdBar);
+            var video = await _repositorio.ObtenerSiguienteAsync(idBar);
 
             if (video == null)
                 return null;
@@ -92,7 +134,9 @@ namespace MusicBares.Application.Servicios
         {
             return await _repositorio.MarcarComoReproduciendoAsync(idVideo);
         }
-        // NUEVO: cola completa round-robin por bar
+
+        // ======================================================
+        // Obtener cola completa Round Robin por bar
         // ======================================================
         public async Task<IEnumerable<VideoMesaListadoDto>> ObtenerColaRoundRobinAsync(int idBar)
         {
@@ -101,12 +145,12 @@ namespace MusicBares.Application.Servicios
             return videos.Select(v => new VideoMesaListadoDto
             {
                 IdVideo = v.IdVideo,
+                IdMesa = v.IdMesa,
                 LinkVideo = v.LinkVideo,
                 IdVideoYoutube = v.IdVideoYoutube,
                 FechaSolicitud = v.FechaSolicitud,
                 EstadoReproduccion = v.EstadoReproduccion
             });
         }
-
     }
 }
