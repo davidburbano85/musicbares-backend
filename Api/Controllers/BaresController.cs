@@ -39,20 +39,16 @@ namespace MusicBares.API.Controllers
         // 🔥 ENDPOINT PARA VER SI JWT FUNCIONA
         // =====================================================
         [HttpGet("debug-token")]
+        [AllowAnonymous]
         public IActionResult DebugToken()
         {
-            // Verifica si el usuario está autenticado
-            var autenticado = User?.Identity?.IsAuthenticated;
+            var header = Request.Headers["Authorization"].ToString();
 
-            // Devuelve autenticación y claims del token
             return Ok(new
             {
-                Autenticado = autenticado,
-                Claims = User.Claims.Select(c => new
-                {
-                    c.Type,
-                    c.Value
-                })
+                Header = header,
+                TieneBearer = header.StartsWith("Bearer "),
+                UserAutenticado = User?.Identity?.IsAuthenticated
             });
         }
 
