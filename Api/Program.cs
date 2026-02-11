@@ -163,7 +163,7 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 
 
 // Redirecciona HTTP → HTTPS
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 
 // Activa middleware de autenticación
