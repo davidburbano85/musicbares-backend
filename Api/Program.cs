@@ -1,149 +1,138 @@
-﻿// Permite trabajar con encabezados cuando el backend está detrás de proxies (Render usa proxy)
-// Librería que permite autenticar usuarios mediante JWT
+﻿// Permite autenticar usuarios usando JWT
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.HttpOverrides;
-// Contiene clases para validar tokens (firma, expiración, issuer, etc.)
-using Microsoft.IdentityModel.Tokens;
-using MusicBares.Application.Interfaces.Context;
-// Importa interfaces de repositorios
-using MusicBares.Application.Interfaces.Repositories;
-// Importa interfaces de servicios
-using MusicBares.Application.Interfaces.Servicios;
-// Importa implementaciones de servicios
-using MusicBares.Application.Servicios;
-// Importa la fábrica que crea conexiones a PostgreSQL
-using MusicBares.Infrastructure.Conexion;
-using MusicBares.Infrastructure.Context;
-// Importa los repositorios Dapper
-using MusicBares.Infrastructure.Repositories;
-// Necesario para convertir el JWT Secret a bytes
-using System.Text;
 
+// Permite manejar encabezados cuando la app está detrás de proxies (Render usa proxy)
+using Microsoft.AspNetCore.HttpOverrides;
+
+// Contiene clases para validar tokens (issuer, expiración, etc.)
+using Microsoft.IdentityModel.Tokens;
+
+// Interfaces del contexto del usuario autenticado
+using MusicBares.Application.Interfaces.Context;
+
+// Interfaces de repositorios
+using MusicBares.Application.Interfaces.Repositories;
+
+// Interfaces de servicios
+using MusicBares.Application.Interfaces.Servicios;
+
+// Implementaciones de servicios
+using MusicBares.Application.Servicios;
+
+// Fábrica que crea conexiones a PostgreSQL
+using MusicBares.Infrastructure.Conexion;
+
+// Implementación del contexto del usuario autenticado
+using MusicBares.Infrastructure.Context;
+
+// Repositorios usando Dapper
+using MusicBares.Infrastructure.Repositories;
 
 
 // Crea el builder principal de la aplicación ASP.NET
 var builder = WebApplication.CreateBuilder(args);
 
-// Obtiene el puerto desde Render (si existe) o usa 8080 local
+
+// Obtiene el puerto desde Render o usa 8080 en local
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+
 
 // Configura la aplicación para escuchar en ese puerto
 builder.WebHost.UseUrls($"http://*:{port}");
 
 
-// Registra FabricaConexion como Singleton
-// Esto significa que habrá una sola instancia durante toda la app
+// Registra FabricaConexion como Singleton (una sola instancia en toda la app)
 builder.Services.AddSingleton<FabricaConexion>();
 
 
-// Inyección de dependencias para BAR
+// ===========================
+// INYECCIÓN DE DEPENDENCIAS
+// ===========================
+
+
+// Repositorio y servicio de Bar
 builder.Services.AddScoped<IBarRepositorio, BarRepositorioDapper>();
 builder.Services.AddScoped<IBarServicio, BarServicio>();
 
 
-// Inyección de dependencias para USUARIO
+// Repositorio y servicio de Usuario
 builder.Services.AddScoped<IUsuarioRepositorio, UsuarioRepositorioDapper>();
 builder.Services.AddScoped<IUsuarioServicio, UsuarioServicio>();
 
 
-// Inyección de dependencias para MESA
+// Repositorio y servicio de Mesa
 builder.Services.AddScoped<IMesaRepositorio, MesaRepositorioDapper>();
 builder.Services.AddScoped<IMesaServicio, MesaServicio>();
 
 
-// Inyección de dependencias para VIDEO MESA
+// Repositorio y servicio de VideoMesa
 builder.Services.AddScoped<IVideoMesaRepositorio, VideoMesaRepositorioDapper>();
 builder.Services.AddScoped<IVideoMesaServicio, VideoMesaServicio>();
 
-//inyeccionde  dependencias para  el usuario context
+
+// Permite acceder al HttpContext actual (necesario para leer el JWT)
 builder.Services.AddHttpContextAccessor();
+
+
+// Contexto que obtiene datos del usuario autenticado desde el JWT
 builder.Services.AddScoped<IUsuarioContext, UsuarioContext>();
 
-// ======================================================
-// Servicio que permite obtener información del usuario autenticado
-// desde el token JWT de Supabase
-// ======================================================
 
-// IHttpContextAccessor permite acceder al HttpContext actual
-// Es necesario para poder leer el token JWT del usuario logueado
-builder.Services.AddHttpContextAccessor();
-
-// Registramos el servicio que obtiene el usuario actual
-// Scoped significa que se crea una instancia por cada request HTTP
+// Servicio que obtiene el usuario actual desde el token
 builder.Services.AddScoped<IUsuarioActualServicio, UsuarioActualServicio>();
 
 
-/*
-=====================================================
-CONFIGURACIÓN DE AUTENTICACIÓN JWT CON SUPABASE
-=====================================================
-*/
+// ===========================
+// CONFIGURACIÓN JWT SUPABASE
+// ===========================
 
 
-// Obtiene el JWT Secret desde variables de entorno en Render
-// Este secret es usado para verificar que el token es válido
-var jwtSecret = Environment.GetEnvironmentVariable("SUPABASE_JWT_SECRET");
-
-
-// Obtiene la URL del proyecto Supabase desde appsettings.json
-// El issuer es quien emitió el token
+// Obtiene el issuer desde appsettings.json
 var issuer = builder.Configuration["Supabase:Issuer"];
 
 
-// Agrega el sistema de autenticación al contenedor de servicios
+// Configura autenticación usando JWT
 builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme) // Define que usaremos JWT como método de autenticación
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        // Obliga a que los tokens solo se acepten vía HTTPS
-        options.RequireHttpsMetadata = true;
+        // Supabase expone las claves públicas automáticamente aquí
+        options.Authority = issuer;
 
-        // Guarda el token dentro del contexto HTTP
-        options.SaveToken = true;
-
-        // Configuración de validación del token
+        // Parámetros de validación del token
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            // Verifica que el token provenga del issuer correcto
+            // Verifica que el token venga del issuer correcto
             ValidateIssuer = true,
 
-            // Issuer válido esperado (tu proyecto Supabase)
+            // Issuer válido esperado
             ValidIssuer = issuer,
 
-            // No validamos audiencia porque Supabase no la usa en este caso
+            // Supabase no requiere validar audiencia
             ValidateAudience = false,
 
             // Verifica que el token no esté expirado
-            ValidateLifetime = true,
-
-            // Verifica la firma del token usando el secret
-            ValidateIssuerSigningKey = true,
-
-            // Convierte el JWT Secret en clave de validación
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwtSecret!)
-            )
+            ValidateLifetime = true
         };
     });
 
 
-// Habilita el sistema de autorización basado en roles/permisos
+// Habilita autorización con atributos como [Authorize]
 builder.Services.AddAuthorization();
 
 
-
-/*
-=====================================================
-SERVICIOS BÁSICOS DE ASP.NET
-=====================================================
-*/
+// ===========================
+// SERVICIOS BÁSICOS ASP.NET
+// ===========================
 
 
 // Permite usar Controllers
 builder.Services.AddControllers();
 
+
 // Permite generar endpoints para Swagger
 builder.Services.AddEndpointsApiExplorer();
+
 
 // Habilita Swagger para documentar la API
 builder.Services.AddSwaggerGen();
@@ -173,11 +162,10 @@ app.UseHttpsRedirection();
 
 
 // Activa autenticación JWT
-// Aquí el backend valida tokens enviados en Authorization: Bearer
 app.UseAuthentication();
 
 
-// Activa autorización basada en atributos como [Authorize]
+// Activa autorización basada en atributos [Authorize]
 app.UseAuthorization();
 
 
