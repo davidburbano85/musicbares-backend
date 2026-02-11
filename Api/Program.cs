@@ -88,6 +88,7 @@ builder.Services
         ValidateAudience = false
     };
 
+    // 👇 AQUÍ VA EL DEBUG
     options.Events = new JwtBearerEvents
     {
         OnAuthenticationFailed = context =>
@@ -102,6 +103,7 @@ builder.Services
         }
     };
 });
+
 
 
 
