@@ -94,13 +94,7 @@ builder.Services
 .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 .AddJwtBearer(options =>
 {
-    // Dirección OpenID metadata Supabase
-    options.MetadataAddress = $"{supabaseIssuer}/.well-known/openid-configuration";
-
-    // Authority sigue siendo necesario
     options.Authority = supabaseIssuer;
-
-    // Fuerza descarga automática de claves públicas JWKS
     options.RequireHttpsMetadata = true;
 
     options.TokenValidationParameters = new TokenValidationParameters
@@ -118,6 +112,7 @@ builder.Services
 
     options.MapInboundClaims = false;
 });
+
 
 
 
