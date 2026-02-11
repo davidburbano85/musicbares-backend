@@ -202,5 +202,21 @@ namespace MusicBares.API.Controllers
                 return StatusCode(500, new { mensaje = ex.Message });
             }
         }
+
+        [HttpGet("debug-auth")]
+        [Authorize]
+        public IActionResult DebugAuth()
+        {
+            var claims = User.Claims.Select(c => new
+            {
+                c.Type,
+                c.Value
+            });
+
+            return Ok(claims);
+        }
+
+
+
     }
 }
