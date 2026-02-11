@@ -94,12 +94,7 @@ builder.Services
 .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 .AddJwtBearer(options =>
 {
-    // Dirección metadata OpenID Supabase
-    options.MetadataAddress =
-        $"{supabaseIssuer}/.well-known/openid-configuration";
-
-    // Fuerza uso HTTPS
-    options.RequireHttpsMetadata = true;
+    options.Authority = supabaseIssuer;
 
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -111,14 +106,17 @@ builder.Services
 
         ValidateLifetime = true,
 
-        // Permite validar firma con JWKS descargadas
         ValidateIssuerSigningKey = true,
+
+        // 🔥 ESTA LÍNEA ES CLAVE
+        ValidAlgorithms = new[] { "ES256" },
 
         ClockSkew = TimeSpan.FromSeconds(30)
     };
 
     options.MapInboundClaims = false;
 });
+
 
 
 
