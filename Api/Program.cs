@@ -81,18 +81,33 @@ builder.Services
 .AddJwtBearer(options =>
 {
     options.Authority = issuer;
-
     options.RequireHttpsMetadata = true;
 
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
         ValidIssuer = issuer,
-
         ValidateAudience = false,
         ValidateLifetime = true
     };
+
+    // 🔥 DEBUG JWT
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
+        {
+            Console.WriteLine("TOKEN INVALIDO: " + context.Exception.Message);
+            return Task.CompletedTask;
+        },
+        OnTokenValidated = context =>
+        {
+            Console.WriteLine("TOKEN VALIDO");
+            return Task.CompletedTask;
+        }
+    };
 });
+
+
 
 
 
