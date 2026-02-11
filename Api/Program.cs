@@ -131,10 +131,7 @@ builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        // Dirección explícita del metadata OpenID de Supabase
-        options.MetadataAddress = $"{supabaseIssuer}/.well-known/openid-configuration";
-
-        // Indica quién emite el token
+        // Usa configuración OpenID de Supabase
         options.Authority = supabaseIssuer;
 
         options.TokenValidationParameters = new TokenValidationParameters
@@ -147,12 +144,10 @@ builder.Services
 
             ValidateLifetime = true,
 
-            // 🔥 Permite algoritmos ECDSA como ES256
-            ValidAlgorithms = new[] { "ES256" },
-
             ClockSkew = TimeSpan.FromSeconds(30)
         };
 
+        // Mantiene nombres originales de claims Supabase
         options.MapInboundClaims = false;
     });
 });
