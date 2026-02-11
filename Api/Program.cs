@@ -94,7 +94,11 @@ builder.Services
 .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 .AddJwtBearer(options =>
 {
-    options.Authority = supabaseIssuer;
+    // Dirección metadata OpenID Supabase
+    options.MetadataAddress =
+        $"{supabaseIssuer}/.well-known/openid-configuration";
+
+    // Fuerza uso HTTPS
     options.RequireHttpsMetadata = true;
 
     options.TokenValidationParameters = new TokenValidationParameters
@@ -107,28 +111,15 @@ builder.Services
 
         ValidateLifetime = true,
 
+        // Permite validar firma con JWKS descargadas
+        ValidateIssuerSigningKey = true,
+
         ClockSkew = TimeSpan.FromSeconds(30)
     };
 
     options.MapInboundClaims = false;
-
-    // 🔥 DEBUG JWT
-    options.Events = new JwtBearerEvents
-    {
-        OnAuthenticationFailed = context =>
-        {
-            Console.WriteLine("JWT ERROR:");
-            Console.WriteLine(context.Exception.ToString());
-            return Task.CompletedTask;
-        },
-
-        OnTokenValidated = context =>
-        {
-            Console.WriteLine("JWT VALIDADO CORRECTAMENTE");
-            return Task.CompletedTask;
-        }
-    };
 });
+
 
 
 
