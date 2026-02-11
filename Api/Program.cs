@@ -94,46 +94,31 @@ builder.Services
 .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 .AddJwtBearer(options =>
 {
-    // Usa configuración OpenID de Supabase
+    // Dirección OpenID metadata Supabase
+    options.MetadataAddress = $"{supabaseIssuer}/.well-known/openid-configuration";
+
+    // Authority sigue siendo necesario
     options.Authority = supabaseIssuer;
+
+    // Fuerza descarga automática de claves públicas JWKS
+    options.RequireHttpsMetadata = true;
 
     options.TokenValidationParameters = new TokenValidationParameters
     {
-        // Verifica issuer
         ValidateIssuer = true,
         ValidIssuer = supabaseIssuer,
 
-        // Verifica audience
         ValidateAudience = true,
         ValidAudience = supabaseAudience,
 
-        // Verifica expiración
         ValidateLifetime = true,
 
-        // Seguridad contra desfases de tiempo
         ClockSkew = TimeSpan.FromSeconds(30)
     };
 
-    // Mantiene nombres originales de claims
     options.MapInboundClaims = false;
-
-    // DEBUG JWT
-    options.Events = new JwtBearerEvents
-    {
-        OnAuthenticationFailed = context =>
-        {
-            Console.WriteLine("ERROR JWT:");
-            Console.WriteLine(context.Exception.ToString());
-            return Task.CompletedTask;
-        },
-
-        OnTokenValidated = context =>
-        {
-            Console.WriteLine("TOKEN VALIDADO OK");
-            return Task.CompletedTask;
-        }
-    };
 });
+
 
 
 // ===========================
