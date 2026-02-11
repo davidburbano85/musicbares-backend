@@ -1,15 +1,21 @@
-﻿// Permite autenticar usuarios usando JWT
+﻿// Permite usar autenticación JWT en ASP.NET
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 
-// Permite manejar encabezados cuando la app está detrás de proxies (Render usa proxy)
+// Permite trabajar correctamente cuando la app está detrás de proxies como Render
 using Microsoft.AspNetCore.HttpOverrides;
 
 // Permite validar tokens JWT
 using Microsoft.IdentityModel.Tokens;
 
+// Permite acceder a configuración del appsettings
+using Microsoft.Extensions.Configuration;
+
+// Interfaces del proyecto
 using MusicBares.Application.Interfaces.Context;
 using MusicBares.Application.Interfaces.Repositories;
 using MusicBares.Application.Interfaces.Servicios;
+
+// Implementaciones del proyecto
 using MusicBares.Application.Servicios;
 using MusicBares.Infrastructure.Conexion;
 using MusicBares.Infrastructure.Context;
@@ -22,88 +28,153 @@ using MusicBares.Infrastructure.Repositories;
 var builder = WebApplication.CreateBuilder(args);
 
 
-// Obtiene puerto desde Render o usa 8080 local
+// Obtiene el puerto que Render asigna dinámicamente
+// Si no existe (ejecución local) usa 8080
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 
-// Configura el puerto
+// Permite que la API escuche en cualquier IP en ese puerto
 builder.WebHost.UseUrls($"http://*:{port}");
+
+
+// ===========================
+// OBTENER CONFIGURACIÓN SUPABASE
+// ===========================
+
+// Obtiene el issuer desde appsettings.json
+// Este valor define quién generó el token JWT
+var supabaseIssuer = builder.Configuration["Supabase:Issuer"];
+
+// Obtiene audience desde appsettings
+// Supabase usa "authenticated" para usuarios logueados
+var supabaseAudience = builder.Configuration["Supabase:Audience"];
 
 
 // ===========================
 // INYECCIÓN DEPENDENCIAS
 // ===========================
 
-// Fábrica conexión BD
+// Fábrica de conexión PostgreSQL
 builder.Services.AddSingleton<FabricaConexion>();
 
 
-// BAR
+// ================= BAR =================
 builder.Services.AddScoped<IBarRepositorio, BarRepositorioDapper>();
 builder.Services.AddScoped<IBarServicio, BarServicio>();
 
 
-// USUARIO
+// ================= USUARIO =================
 builder.Services.AddScoped<IUsuarioRepositorio, UsuarioRepositorioDapper>();
 builder.Services.AddScoped<IUsuarioServicio, UsuarioServicio>();
 
 
-// MESA
+// ================= MESA =================
 builder.Services.AddScoped<IMesaRepositorio, MesaRepositorioDapper>();
 builder.Services.AddScoped<IMesaServicio, MesaServicio>();
 
 
-// VIDEO MESA
+// ================= VIDEO MESA =================
 builder.Services.AddScoped<IVideoMesaRepositorio, VideoMesaRepositorioDapper>();
 builder.Services.AddScoped<IVideoMesaServicio, VideoMesaServicio>();
 
 
-// Acceso al HttpContext
+// Permite acceder al HttpContext actual
 builder.Services.AddHttpContextAccessor();
 
-// Contexto usuario autenticado
+
+// Contexto del usuario autenticado
 builder.Services.AddScoped<IUsuarioContext, UsuarioContext>();
 
-// Servicio usuario actual
+
+// Servicio que obtiene usuario actual desde JWT
 builder.Services.AddScoped<IUsuarioActualServicio, UsuarioActualServicio>();
 
 
 /*
 =========================================
-CONFIGURACIÓN JWT SUPABASE (FORMA MODERNA)
+CONFIGURACIÓN AUTENTICACIÓN JWT SUPABASE
 =========================================
 */
-
-// Obtiene issuer desde appsettings
-
 builder.Services
 .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 .AddJwtBearer(options =>
 {
-    options.Authority = "https://kthypysefudciehungyg.supabase.co/auth/v1";
+    // Define el proveedor de autenticación
+    // ASP.NET descargará automáticamente las claves públicas de Supabase
+    options.Authority = supabaseIssuer;
 
+    // Parámetros que definen cómo validar el token
     options.TokenValidationParameters = new TokenValidationParameters
     {
+        // Verifica que el token venga del issuer correcto
         ValidateIssuer = true,
-        ValidIssuer = "https://kthypysefudciehungyg.supabase.co/auth/v1",
-        ValidateAudience = false,
-        ValidateLifetime = true
+        ValidIssuer = supabaseIssuer,
+
+        // Verifica que el token sea para usuarios autenticados
+        ValidateAudience = true,
+        ValidAudience = supabaseAudience,
+
+        // Rechaza tokens expirados
+        ValidateLifetime = true,
+
+        // Reduce margen de tolerancia de expiración (mejor seguridad)
+        ClockSkew = TimeSpan.FromSeconds(30)
     };
 
-    // 🔥 ESTA LÍNEA ES CLAVE CON SUPABASE
+    // Evita que .NET renombre automáticamente los claims
+    // Supabase usa nombres estándar que queremos conservar
     options.MapInboundClaims = false;
+
+    // ==========================
+    // EVENTOS DE DEBUG JWT
+    // ==========================
+    options.Events = new JwtBearerEvents
+    {
+        // Se ejecuta cuando llega el token
+        OnMessageReceived = context =>
+        {
+            // Obtiene el header Authorization
+            var authHeader = context.Request.Headers["Authorization"].ToString();
+
+            // Log útil para debugging
+            if (string.IsNullOrWhiteSpace(authHeader))
+            {
+                Console.WriteLine("⚠ Authorization header vacío");
+            }
+
+            return Task.CompletedTask;
+        },
+
+        // Se ejecuta cuando falla la autenticación
+        OnAuthenticationFailed = context =>
+        {
+            Console.WriteLine("❌ Error validando JWT:");
+            Console.WriteLine(context.Exception.Message);
+
+            return Task.CompletedTask;
+        },
+
+        // Se ejecuta cuando el token es válido
+        OnTokenValidated = context =>
+        {
+            Console.WriteLine("✅ Token JWT validado correctamente");
+
+            return Task.CompletedTask;
+        }
+    };
 });
 
 
-
-
-
-// Autorización
+// ===========================
+// AUTORIZACIÓN
+// ===========================
 builder.Services.AddAuthorization();
 
 
 // Controllers
 builder.Services.AddControllers();
 
+
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -114,7 +185,7 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 
-// Swagger solo desarrollo
+// Swagger solo en desarrollo
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -122,7 +193,7 @@ if (app.Environment.IsDevelopment())
 }
 
 
-// Permite trabajar detrás del proxy Render
+// Permite que Render pase correctamente IP y protocolo original
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
     ForwardedHeaders =
@@ -131,17 +202,21 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 });
 
 
+// Redirecciona HTTP → HTTPS
 app.UseHttpsRedirection();
 
 
-// Activa autenticación
+// Activa middleware de autenticación
 app.UseAuthentication();
 
-// Activa autorización
+
+// Activa middleware de autorización
 app.UseAuthorization();
 
 
-// Map Controllers
+// Mapea controladores
 app.MapControllers();
 
+
+// Ejecuta la aplicación
 app.Run();
