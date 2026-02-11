@@ -1,20 +1,16 @@
 ﻿// Permite usar autenticación JWT en ASP.NET
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-
 // Permite trabajar correctamente cuando la app está detrás de proxies como Render
 using Microsoft.AspNetCore.HttpOverrides;
-
-// Permite validar tokens JWT
-using Microsoft.IdentityModel.Tokens;
-
 // Permite acceder a configuración del appsettings
 using Microsoft.Extensions.Configuration;
-
+using Microsoft.Extensions.Options;
+// Permite validar tokens JWT
+using Microsoft.IdentityModel.Tokens;
 // Interfaces del proyecto
 using MusicBares.Application.Interfaces.Context;
 using MusicBares.Application.Interfaces.Repositories;
 using MusicBares.Application.Interfaces.Servicios;
-
 // Implementaciones del proyecto
 using MusicBares.Application.Servicios;
 using MusicBares.Infrastructure.Conexion;
@@ -150,8 +146,17 @@ builder.Services
         // Mantiene nombres originales de claims Supabase
         options.MapInboundClaims = false;
     });
-});
 
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
+        {
+            Console.WriteLine("ERROR JWT:");
+            Console.WriteLine(context.Exception.ToString());
+            return Task.CompletedTask;
+        }
+    };
+});
 
 // ===========================
 // AUTORIZACIÓN
