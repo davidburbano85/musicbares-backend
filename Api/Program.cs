@@ -74,25 +74,32 @@ CONFIGURACIÓN JWT SUPABASE (FORMA MODERNA)
 */
 
 // Obtiene issuer desde appsettings
-var jwtSecret = builder.Configuration["SUPABASE_JWT_SECRET"];
 
 builder.Services
 .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 .AddJwtBearer(options =>
 {
+    options.Authority = "https://kthypysefudciehungyg.supabase.co/auth/v1";
+    options.RequireHttpsMetadata = true;
+
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
-        ValidIssuer = builder.Configuration["Supabase:Issuer"],
+        ValidateAudience = false
+    };
 
-        ValidateAudience = false,
-
-        ValidateLifetime = true,
-
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(
-            System.Text.Encoding.UTF8.GetBytes(jwtSecret)
-        )
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
+        {
+            Console.WriteLine("TOKEN INVALIDO: " + context.Exception.Message);
+            return Task.CompletedTask;
+        },
+        OnTokenValidated = context =>
+        {
+            Console.WriteLine("TOKEN VALIDO");
+            return Task.CompletedTask;
+        }
     };
 });
 
