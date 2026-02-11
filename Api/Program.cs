@@ -94,59 +94,30 @@ builder.Services
 .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 .AddJwtBearer(options =>
 {
-    // Define el proveedor de autenticación
-    // ASP.NET descargará automáticamente las claves públicas de Supabase
+    // Usa configuración OpenID de Supabase
     options.Authority = supabaseIssuer;
 
-    // Parámetros que definen cómo validar el token
     options.TokenValidationParameters = new TokenValidationParameters
     {
-        // Verifica que el token venga del issuer correcto
+        // Verifica issuer
         ValidateIssuer = true,
         ValidIssuer = supabaseIssuer,
 
-        // Verifica que el token sea para usuarios autenticados
+        // Verifica audience
         ValidateAudience = true,
         ValidAudience = supabaseAudience,
 
-        // Rechaza tokens expirados
+        // Verifica expiración
         ValidateLifetime = true,
 
-        // Reduce margen de tolerancia de expiración (mejor seguridad)
+        // Seguridad contra desfases de tiempo
         ClockSkew = TimeSpan.FromSeconds(30)
     };
 
-    // Evita que .NET renombre automáticamente los claims
-    // Supabase usa nombres estándar que queremos conservar
+    // Mantiene nombres originales de claims
     options.MapInboundClaims = false;
 
-    // ==========================
-    // EVENTOS DE DEBUG JWT
-    // ==========================
-    builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        // Usa configuración OpenID de Supabase
-        options.Authority = supabaseIssuer;
-
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidIssuer = supabaseIssuer,
-
-            ValidateAudience = true,
-            ValidAudience = supabaseAudience,
-
-            ValidateLifetime = true,
-
-            ClockSkew = TimeSpan.FromSeconds(30)
-        };
-
-        // Mantiene nombres originales de claims Supabase
-        options.MapInboundClaims = false;
-    });
-
+    // DEBUG JWT
     options.Events = new JwtBearerEvents
     {
         OnAuthenticationFailed = context =>
@@ -154,9 +125,16 @@ builder.Services
             Console.WriteLine("ERROR JWT:");
             Console.WriteLine(context.Exception.ToString());
             return Task.CompletedTask;
+        },
+
+        OnTokenValidated = context =>
+        {
+            Console.WriteLine("TOKEN VALIDADO OK");
+            return Task.CompletedTask;
         }
     };
 });
+
 
 // ===========================
 // AUTORIZACIÓN
