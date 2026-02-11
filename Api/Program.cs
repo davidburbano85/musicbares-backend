@@ -77,27 +77,23 @@ CONFIGURACIÓN JWT SUPABASE (FORMA MODERNA)
 var issuer = builder.Configuration["Supabase:Issuer"];
 
 builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+.AddJwtBearer(options =>
+{
+    options.Authority = issuer;
+
+    options.RequireHttpsMetadata = true;
+
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        // Endpoint donde Supabase expone claves públicas
-        options.Authority = $"{issuer}/auth/v1";
+        ValidateIssuer = true,
+        ValidIssuer = issuer,
 
-        // Importante para JWKS
-        options.RequireHttpsMetadata = true;
+        ValidateAudience = false,
+        ValidateLifetime = true
+    };
+});
 
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidIssuer = $"{issuer}/auth/v1",
-
-            ValidateAudience = false,
-            ValidateLifetime = true,
-
-            // 👇 ESTA LÍNEA ES CLAVE CON SUPABASE
-            NameClaimType = "sub"
-        };
-    });
 
 
 // Autorización
