@@ -166,5 +166,18 @@ namespace MusicBares.API.Controllers
             //return Ok(new { mensaje = "🔥 CONTROLADOR NUEVO 🔥" });
         }
 
+        [HttpGet("debug-token")]
+        [Authorize]
+        public IActionResult DebugToken()
+        {
+            var user = User?.Identity?.IsAuthenticated;
+
+            return Ok(new
+            {
+                Autenticado = user,
+                Claims = User.Claims.Select(c => new { c.Type, c.Value })
+            });
+        }
+
     }
 }
