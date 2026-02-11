@@ -75,20 +75,23 @@ CONFIGURACIÓN JWT SUPABASE (FORMA MODERNA)
 
 // Obtiene issuer desde appsettings
 
+var issuer = "https://kthypysefudciehungyg.supabase.co/auth/v1";
+
 builder.Services
 .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 .AddJwtBearer(options =>
 {
-    options.Authority = "https://kthypysefudciehungyg.supabase.co/auth/v1";
+    options.Authority = issuer;
     options.RequireHttpsMetadata = true;
 
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
-        ValidateAudience = false
+        ValidIssuer = issuer,
+        ValidateAudience = false,
+        ValidateLifetime = true
     };
 
-    // 👇 AQUÍ VA EL DEBUG
     options.Events = new JwtBearerEvents
     {
         OnAuthenticationFailed = context =>
