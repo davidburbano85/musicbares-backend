@@ -80,18 +80,22 @@ builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        // Supabase expone automáticamente sus claves públicas aquí
+        // Endpoint donde Supabase expone claves públicas
         options.Authority = $"{issuer}/auth/v1";
+
+        // Importante para JWKS
+        options.RequireHttpsMetadata = true;
 
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            // Supabase valida issuer internamente
             ValidateIssuer = true,
-
             ValidIssuer = $"{issuer}/auth/v1",
 
             ValidateAudience = false,
-            ValidateLifetime = true
+            ValidateLifetime = true,
+
+            // 👇 ESTA LÍNEA ES CLAVE CON SUPABASE
+            NameClaimType = "sub"
         };
     });
 
