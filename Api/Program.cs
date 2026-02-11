@@ -88,9 +88,13 @@ builder.Services
     {
         ValidateIssuer = true,
         ValidIssuer = issuer,
-        ValidateAudience = false,
+
+        ValidateAudience = true,
+        ValidAudience = "authenticated",
+
         ValidateLifetime = true
     };
+
 
     options.Events = new JwtBearerEvents
     {
