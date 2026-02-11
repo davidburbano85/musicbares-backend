@@ -103,7 +103,7 @@ builder.Services
         options.TokenValidationParameters = new TokenValidationParameters
         {
             // Verifica que el token venga del issuer correcto
-            ValidateIssuer = false,
+            ValidateIssuer = true,
 
            
 
