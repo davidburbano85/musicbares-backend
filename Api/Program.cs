@@ -127,40 +127,34 @@ builder.Services
     // ==========================
     // EVENTOS DE DEBUG JWT
     // ==========================
-    options.Events = new JwtBearerEvents
+    builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
     {
-        // Se ejecuta cuando llega el token
-        OnMessageReceived = context =>
+        // Dirección explícita del metadata OpenID de Supabase
+        options.MetadataAddress = $"{supabaseIssuer}/.well-known/openid-configuration";
+
+        // Indica quién emite el token
+        options.Authority = supabaseIssuer;
+
+        options.TokenValidationParameters = new TokenValidationParameters
         {
-            // Obtiene el header Authorization
-            var authHeader = context.Request.Headers["Authorization"].ToString();
+            ValidateIssuer = true,
+            ValidIssuer = supabaseIssuer,
 
-            // Log útil para debugging
-            if (string.IsNullOrWhiteSpace(authHeader))
-            {
-                Console.WriteLine("⚠ Authorization header vacío");
-            }
+            ValidateAudience = true,
+            ValidAudience = supabaseAudience,
 
-            return Task.CompletedTask;
-        },
+            ValidateLifetime = true,
 
-        // Se ejecuta cuando falla la autenticación
-        OnAuthenticationFailed = context =>
-        {
-            Console.WriteLine("❌ Error validando JWT:");
-            Console.WriteLine(context.Exception.Message);
+            // 🔥 Permite algoritmos ECDSA como ES256
+            ValidAlgorithms = new[] { "ES256" },
 
-            return Task.CompletedTask;
-        },
+            ClockSkew = TimeSpan.FromSeconds(30)
+        };
 
-        // Se ejecuta cuando el token es válido
-        OnTokenValidated = context =>
-        {
-            Console.WriteLine("✅ Token JWT validado correctamente");
-
-            return Task.CompletedTask;
-        }
-    };
+        options.MapInboundClaims = false;
+    });
 });
 
 
