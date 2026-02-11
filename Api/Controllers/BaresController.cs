@@ -12,7 +12,7 @@ namespace MusicBares.API.Controllers
     [Route("api/bar")]
 
     // Obliga a que todos los endpoints requieran autenticación
-    [Authorize]
+   // [Authorize]
     public class BarController : ControllerBase
     {
         // Servicio que contiene la lógica de negocio de Bar
