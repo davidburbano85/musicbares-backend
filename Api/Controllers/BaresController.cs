@@ -231,6 +231,36 @@ namespace MusicBares.API.Controllers
             });
         }
 
+        [HttpGet("debug-config")]
+        [AllowAnonymous]
+        public IActionResult DebugConfig([FromServices] IConfiguration config)
+        {
+            Console.WriteLine("===== DEBUG CONFIG SUPABASE =====");
+
+            var issuer = config["Supabase:Issuer"];
+            var audience = config["Supabase:Audience"];
+            var url = config["Supabase:Url"];
+
+            Console.WriteLine($"Issuer leído: {issuer}");
+            Console.WriteLine($"Audience leído: {audience}");
+            Console.WriteLine($"Url leído: {url}");
+
+            if (string.IsNullOrEmpty(issuer))
+                Console.WriteLine("⚠️ Issuer es NULL o vacío");
+
+            if (string.IsNullOrEmpty(audience))
+                Console.WriteLine("⚠️ Audience es NULL o vacío");
+
+            Console.WriteLine("===== FIN DEBUG CONFIG =====");
+
+            return Ok(new
+            {
+                issuer,
+                audience,
+                url
+            });
+        }
+
 
     }
 }
