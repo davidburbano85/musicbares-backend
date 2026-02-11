@@ -111,6 +111,23 @@ builder.Services
     };
 
     options.MapInboundClaims = false;
+
+    // 🔥 DEBUG JWT
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
+        {
+            Console.WriteLine("JWT ERROR:");
+            Console.WriteLine(context.Exception.ToString());
+            return Task.CompletedTask;
+        },
+
+        OnTokenValidated = context =>
+        {
+            Console.WriteLine("JWT VALIDADO CORRECTAMENTE");
+            return Task.CompletedTask;
+        }
+    };
 });
 
 
