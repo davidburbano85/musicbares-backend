@@ -216,6 +216,20 @@ namespace MusicBares.API.Controllers
             return Ok(claims);
         }
 
+        [HttpGet("whoami")]
+        [Authorize]
+        public IActionResult WhoAmI()
+        {
+            var claims = User.Claims
+                .Select(c => new { c.Type, c.Value })
+                .ToList();
+
+            return Ok(new
+            {
+                autenticado = User.Identity?.IsAuthenticated,
+                claims = claims
+            });
+        }
 
 
     }
