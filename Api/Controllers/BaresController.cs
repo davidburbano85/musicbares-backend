@@ -5,17 +5,55 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace MusicBares.API.Controllers
 {
+    // Indica que este controlador es una API
     [ApiController]
+
+    // Ruta base del controlador
     [Route("api/bar")]
 
+    // Obliga a que todos los endpoints requieran autenticación
     [Authorize]
     public class BarController : ControllerBase
     {
+        // Servicio que contiene la lógica de negocio de Bar
         private readonly IBarServicio _barServicio;
 
+        // Constructor que recibe el servicio por inyección de dependencias
         public BarController(IBarServicio barServicio)
         {
             _barServicio = barServicio;
+        }
+
+        // =====================================================
+        // 🔥 ENDPOINT SOLO PARA SABER SI LA API RESPONDE
+        // NO REQUIERE TOKEN
+        // =====================================================
+        [HttpGet("ping")]
+        [AllowAnonymous] // Permite entrar sin autenticación
+        public IActionResult Ping()
+        {
+            return Ok("API funcionando correctamente");
+        }
+
+        // =====================================================
+        // 🔥 ENDPOINT PARA VER SI JWT FUNCIONA
+        // =====================================================
+        [HttpGet("debug-token")]
+        public IActionResult DebugToken()
+        {
+            // Verifica si el usuario está autenticado
+            var autenticado = User?.Identity?.IsAuthenticated;
+
+            // Devuelve autenticación y claims del token
+            return Ok(new
+            {
+                Autenticado = autenticado,
+                Claims = User.Claims.Select(c => new
+                {
+                    c.Type,
+                    c.Value
+                })
+            });
         }
 
         // ================================
@@ -62,7 +100,6 @@ namespace MusicBares.API.Controllers
 
         // ================================
         // Listar todos los bares
-        // Uso administrativo o general
         // ================================
         [HttpGet]
         public async Task<IActionResult> Listar()
@@ -80,7 +117,6 @@ namespace MusicBares.API.Controllers
 
         // ================================
         // Obtener bares por usuario
-        // Importante para multi-tenant
         // ================================
         [HttpGet("usuario/{idUsuario}")]
         public async Task<IActionResult> ObtenerPorUsuario(int idUsuario)
@@ -97,15 +133,16 @@ namespace MusicBares.API.Controllers
         }
 
         // ================================
-        // Actualizar información de un bar
+        // Actualizar bar
         // ================================
         [HttpPut("{IdBar}")]
-        public async Task<IActionResult> Actualizar(int IdBar,[FromBody] BarActualizarDto dto)
+        public async Task<IActionResult> Actualizar(int IdBar, [FromBody] BarActualizarDto dto)
         {
             try
             {
                 if (IdBar != dto.IdBar)
-                    return BadRequest("el id no existe.");
+                    return BadRequest("El id no coincide.");
+
                 var resultado = await _barServicio.ActualizarAsync(dto);
 
                 if (!resultado.Exitoso)
@@ -120,7 +157,7 @@ namespace MusicBares.API.Controllers
         }
 
         // ================================
-        // Eliminación lógica de un bar
+        // Eliminación lógica
         // ================================
         [HttpDelete("{idBar}")]
         public async Task<IActionResult> Eliminar(int idBar)
@@ -128,7 +165,6 @@ namespace MusicBares.API.Controllers
             try
             {
                 var resultado = await _barServicio.EliminarAsync(idBar);
-
                 return Ok(resultado);
             }
             catch (ArgumentException ex)
@@ -141,16 +177,15 @@ namespace MusicBares.API.Controllers
             }
         }
 
-        
+        // ================================
+        // Reactivar bar
+        // ================================
         [HttpPatch("reactivar/{idBar}")]
         public async Task<IActionResult> Reactivar(int idBar)
         {
-            Console.WriteLine("🔥 ENTRO AL CONTROLLER");
-
             try
             {
                 var resultado = await _barServicio.ReactivarAsync(idBar);
-
                 return Ok(resultado);
             }
             catch (ArgumentException ex)
@@ -161,23 +196,6 @@ namespace MusicBares.API.Controllers
             {
                 return StatusCode(500, new { mensaje = ex.Message });
             }
-
-
-            //return Ok(new { mensaje = "🔥 CONTROLADOR NUEVO 🔥" });
         }
-
-        [HttpGet("debug-token")]
-        [Authorize]
-        public IActionResult DebugToken()
-        {
-            var user = User?.Identity?.IsAuthenticated;
-
-            return Ok(new
-            {
-                Autenticado = user,
-                Claims = User.Claims.Select(c => new { c.Type, c.Value })
-            });
-        }
-
     }
 }
