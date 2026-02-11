@@ -12,7 +12,7 @@ namespace MusicBares.API.Controllers
     [Route("api/bar")]
 
     // Obliga a que todos los endpoints requieran autenticación
-   // [Authorize]
+    [Authorize]
     public class BarController : ControllerBase
     {
         // Servicio que contiene la lógica de negocio de Bar
@@ -44,13 +44,22 @@ namespace MusicBares.API.Controllers
         {
             var header = Request.Headers["Authorization"].ToString();
 
+            string token = null;
+
+            if (!string.IsNullOrWhiteSpace(header) && header.StartsWith("Bearer "))
+            {
+                token = header.Substring("Bearer ".Length);
+            }
+
             return Ok(new
             {
-                Header = header,
-                TieneBearer = header.StartsWith("Bearer "),
-                UserAutenticado = User?.Identity?.IsAuthenticated
+                HeaderCompleto = header,
+                TokenExtraido = token,
+                LargoToken = token?.Length,
+                TienePuntos = token?.Count(c => c == '.')
             });
         }
+
 
         // ================================
         // Crear un nuevo bar
