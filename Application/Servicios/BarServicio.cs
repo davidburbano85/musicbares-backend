@@ -123,7 +123,12 @@ namespace MusicBares.Application.Servicios
                 if (bar == null)
                     return null;
 
-                // Mapping Entidad → DTO
+                // ⭐ VALIDAR PROPIETARIO
+                var idUsuarioActual = await _usuarioActualServicio.ObtenerIdUsuarioAsync();
+
+                if (bar.IdUsuario != idUsuarioActual)
+                    return null;
+
                 return new BarListadoDto
                 {
                     IdBar = bar.IdBar,
@@ -134,7 +139,6 @@ namespace MusicBares.Application.Servicios
             }
             catch
             {
-                // En consultas simples es válido devolver null
                 return null;
             }
         }
@@ -145,9 +149,10 @@ namespace MusicBares.Application.Servicios
         {
             try
             {
-                var bares = await _barRepositorio.ListarAsync();
+                var idUsuario = await _usuarioActualServicio.ObtenerIdUsuarioAsync();
 
-                // Mapping Entidad → DTO
+                var bares = await _barRepositorio.ObtenerPorUsuarioAsync(idUsuario);
+
                 return bares.Select(bar => new BarListadoDto
                 {
                     IdBar = bar.IdBar,
@@ -158,22 +163,25 @@ namespace MusicBares.Application.Servicios
             }
             catch
             {
-                // Retornamos colección vacía para evitar romper el flujo
                 return Enumerable.Empty<BarListadoDto>();
             }
         }
 
-        /// <summary>
+
         /// Obtiene los bares pertenecientes a un usuario específico.
         /// Fundamental para arquitectura multi-tenant.
-        /// </summary>
+
         public async Task<IEnumerable<BarListadoDto>> ObtenerPorUsuarioAsync(int idUsuario)
         {
             try
             {
+                var idUsuarioActual = await _usuarioActualServicio.ObtenerIdUsuarioAsync();
+
+                if (idUsuario != idUsuarioActual)
+                    return Enumerable.Empty<BarListadoDto>();
+
                 var bares = await _barRepositorio.ObtenerPorUsuarioAsync(idUsuario);
 
-                // Mapping Entidad → DTO
                 return bares.Select(bar => new BarListadoDto
                 {
                     IdBar = bar.IdBar,
@@ -188,9 +196,9 @@ namespace MusicBares.Application.Servicios
             }
         }
 
-        /// <summary>
+
         /// Actualiza la información de un bar existente.
-        /// </summary>
+
         public async Task<BarRespuestaDto> ActualizarAsync(BarActualizarDto dto)
         {
             try
@@ -204,6 +212,18 @@ namespace MusicBares.Application.Servicios
                     {
                         Exitoso = false,
                         Mensaje = "El bar no existe"
+                    };
+                }
+
+                // ⭐ VALIDAR QUE EL BAR PERTENEZCA AL USUARIO AUTENTICADO
+                var idUsuarioActual = await _usuarioActualServicio.ObtenerIdUsuarioAsync();
+
+                if (barExistente.IdUsuario != idUsuarioActual)
+                {
+                    return new BarRespuestaDto
+                    {
+                        Exitoso = false,
+                        Mensaje = "No tienes permisos para modificar este bar"
                     };
                 }
 
@@ -231,7 +251,6 @@ namespace MusicBares.Application.Servicios
                 barExistente.Direccion = dto.Direccion.Trim();
 
                 // ⚠️ Estado NO se modifica aquí
-                // Estado solo se cambia en Eliminar o Reactivar
 
                 var actualizado = await _barRepositorio.ActualizarAsync(barExistente);
 
@@ -275,6 +294,12 @@ namespace MusicBares.Application.Servicios
             if (bar == null)
                 throw new Exception("El bar no existe");
 
+            // ⭐ VALIDAR QUE EL BAR PERTENEZCA AL USUARIO AUTENTICADO
+            var idUsuarioActual = await _usuarioActualServicio.ObtenerIdUsuarioAsync();
+
+            if (bar.IdUsuario != idUsuarioActual)
+                throw new Exception("No tienes permisos para eliminar este bar");
+
             // Ejecutamos eliminación lógica
             var eliminado = await _barRepositorio.EliminarAsync(idBar);
 
@@ -293,19 +318,23 @@ namespace MusicBares.Application.Servicios
         {
             Console.WriteLine("🔥 VERSION NUEVA DEL SERVICIO 🔥🔥🔥");
 
-
-
             // Validación básica del id
             if (idBar <= 0)
                 throw new ArgumentException("El id del bar es inválido");
 
             // Buscar el bar en BD
-
             Console.WriteLine("ANTES DE LLAMAR REPO");
             var bar = await _barRepositorio.ObtenerPorIdAsync(idBar);
             Console.WriteLine("DESPUES DE LLAMAR REPO");
+
             if (bar == null)
                 throw new Exception("El bar no existe");
+
+            // ⭐ VALIDAR QUE EL BAR PERTENEZCA AL USUARIO AUTENTICADO
+            var idUsuarioActual = await _usuarioActualServicio.ObtenerIdUsuarioAsync();
+
+            if (bar.IdUsuario != idUsuarioActual)
+                throw new Exception("No tienes permisos para reactivar este bar");
 
             // Si ya está activo, no hacemos nada
             if (bar.Estado)

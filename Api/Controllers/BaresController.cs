@@ -5,38 +5,30 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace MusicBares.API.Controllers
 {
-    // Indica que este controlador es una API
     [ApiController]
-
-    // Ruta base del controlador
     [Route("api/bar")]
-
-    // Obliga a que todos los endpoints requieran autenticación
     [Authorize]
     public class BarController : ControllerBase
     {
-        // Servicio que contiene la lógica de negocio de Bar
         private readonly IBarServicio _barServicio;
 
-        // Constructor que recibe el servicio por inyección de dependencias
         public BarController(IBarServicio barServicio)
         {
             _barServicio = barServicio;
         }
 
         // =====================================================
-        // 🔥 ENDPOINT SOLO PARA SABER SI LA API RESPONDE
-        // NO REQUIERE TOKEN
+        // Ping API
         // =====================================================
         [HttpGet("ping")]
-        [AllowAnonymous] // Permite entrar sin autenticación
+        [AllowAnonymous]
         public IActionResult Ping()
         {
             return Ok("API funcionando correctamente");
         }
 
         // =====================================================
-        // 🔥 ENDPOINT PARA VER SI JWT FUNCIONA
+        // Debug Token
         // =====================================================
         [HttpGet("debug-token")]
         [AllowAnonymous]
@@ -60,26 +52,18 @@ namespace MusicBares.API.Controllers
             });
         }
 
-
         // ================================
-        // Crear un nuevo bar
+        // Crear bar
         // ================================
         [HttpPost]
         public async Task<IActionResult> Crear([FromBody] BarCrearDto dto)
         {
-            try
-            {
-                var resultado = await _barServicio.CrearAsync(dto);
+            var resultado = await _barServicio.CrearAsync(dto);
 
-                if (!resultado.Exitoso)
-                    return BadRequest(resultado);
+            if (!resultado.Exitoso)
+                return BadRequest(resultado);
 
-                return Ok(resultado);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error interno al crear el bar: {ex.Message}");
-            }
+            return Ok(resultado);
         }
 
         // ================================
@@ -88,77 +72,29 @@ namespace MusicBares.API.Controllers
         [HttpGet("{idBar}")]
         public async Task<IActionResult> ObtenerPorId(int idBar)
         {
-            try
-            {
-                var bar = await _barServicio.ObtenerPorIdAsync(idBar);
+            var bar = await _barServicio.ObtenerPorIdAsync(idBar);
 
-                if (bar == null)
-                    return NotFound("Bar no encontrado");
+            if (bar == null)
+                return NotFound("Bar no encontrado");
 
-                return Ok(bar);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error interno al obtener el bar: {ex.Message}");
-            }
-        }
-
-        // ================================
-        // Listar todos los bares
-        // ================================
-        [HttpGet]
-        public async Task<IActionResult> Listar()
-        {
-            try
-            {
-                var bares = await _barServicio.ListarAsync();
-                return Ok(bares);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error interno al listar bares: {ex.Message}");
-            }
-        }
-
-        // ================================
-        // Obtener bares por usuario
-        // ================================
-        [HttpGet("usuario/{idUsuario}")]
-        public async Task<IActionResult> ObtenerPorUsuario(int idUsuario)
-        {
-            try
-            {
-                var bares = await _barServicio.ObtenerPorUsuarioAsync(idUsuario);
-                return Ok(bares);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error interno al obtener bares del usuario: {ex.Message}");
-            }
+            return Ok(bar);
         }
 
         // ================================
         // Actualizar bar
         // ================================
-        [HttpPut("{IdBar}")]
-        public async Task<IActionResult> Actualizar(int IdBar, [FromBody] BarActualizarDto dto)
+        [HttpPut("{idBar}")]
+        public async Task<IActionResult> Actualizar(int idBar, [FromBody] BarActualizarDto dto)
         {
-            try
-            {
-                if (IdBar != dto.IdBar)
-                    return BadRequest("El id no coincide.");
+            if (idBar != dto.IdBar)
+                return BadRequest("El id no coincide.");
 
-                var resultado = await _barServicio.ActualizarAsync(dto);
+            var resultado = await _barServicio.ActualizarAsync(dto);
 
-                if (!resultado.Exitoso)
-                    return BadRequest(resultado);
+            if (!resultado.Exitoso)
+                return BadRequest(resultado);
 
-                return Ok(resultado);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error interno al actualizar el bar: {ex.Message}");
-            }
+            return Ok(resultado);
         }
 
         // ================================
@@ -203,8 +139,10 @@ namespace MusicBares.API.Controllers
             }
         }
 
+        // =====================================================
+        // Debug Auth
+        // =====================================================
         [HttpGet("debug-auth")]
-        [Authorize]
         public IActionResult DebugAuth()
         {
             var claims = User.Claims.Select(c => new
@@ -217,7 +155,6 @@ namespace MusicBares.API.Controllers
         }
 
         [HttpGet("whoami")]
-        [Authorize]
         public IActionResult WhoAmI()
         {
             var claims = User.Claims
@@ -231,27 +168,16 @@ namespace MusicBares.API.Controllers
             });
         }
 
+        // =====================================================
+        // Debug Config
+        // =====================================================
         [HttpGet("debug-config")]
         [AllowAnonymous]
         public IActionResult DebugConfig([FromServices] IConfiguration config)
         {
-            Console.WriteLine("===== DEBUG CONFIG SUPABASE =====");
-
             var issuer = config["Supabase:Issuer"];
             var audience = config["Supabase:Audience"];
             var url = config["Supabase:Url"];
-
-            Console.WriteLine($"Issuer leído: {issuer}");
-            Console.WriteLine($"Audience leído: {audience}");
-            Console.WriteLine($"Url leído: {url}");
-
-            if (string.IsNullOrEmpty(issuer))
-                Console.WriteLine("⚠️ Issuer es NULL o vacío");
-
-            if (string.IsNullOrEmpty(audience))
-                Console.WriteLine("⚠️ Audience es NULL o vacío");
-
-            Console.WriteLine("===== FIN DEBUG CONFIG =====");
 
             return Ok(new
             {
@@ -260,7 +186,5 @@ namespace MusicBares.API.Controllers
                 url
             });
         }
-
-
     }
 }
