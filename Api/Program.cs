@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 // Permite validar tokens JWT
 using Microsoft.IdentityModel.Tokens;
+
 // Interfaces del proyecto
 using MusicBares.Application.Interfaces.Context;
 using MusicBares.Application.Interfaces.Repositories;
@@ -92,9 +93,15 @@ CONFIGURACIÓN AUTENTICACIÓN JWT SUPABASE
 */
 builder.Services
 .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-.AddJwtBearer(options =>
+.AddJwtBearer(async options =>
 {
-    options.Authority = supabaseIssuer;
+    var http = new HttpClient();
+
+    var jwks = await http.GetStringAsync(
+        $"{supabaseIssuer}/.well-known/jwks.json"
+    );
+
+    var keys = new JsonWebKeySet(jwks).GetSigningKeys();
 
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -107,9 +114,7 @@ builder.Services
         ValidateLifetime = true,
 
         ValidateIssuerSigningKey = true,
-
-        // 🔥 ESTA LÍNEA ES CLAVE
-        ValidAlgorithms = new[] { "ES256" },
+        IssuerSigningKeys = keys,
 
         ClockSkew = TimeSpan.FromSeconds(30)
     };
