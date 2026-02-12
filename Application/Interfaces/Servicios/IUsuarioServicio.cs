@@ -8,9 +8,8 @@ namespace MusicBares.Application.Interfaces.Servicios
         // Crear usuario
         Task<UsuarioRespuestaDto> CrearAsync(UsuarioCrearDto dto);
 
-        // Login
-        Task<UsuarioRespuestaDto> LoginAsync(UsuarioLoginDto dto);
-
+      
+       
         // Obtener usuario por id
         Task<UsuarioListadoDto?> ObtenerPorIdAsync(int idUsuario);
 

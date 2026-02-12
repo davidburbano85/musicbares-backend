@@ -18,11 +18,7 @@
         // ==========================================
         public string CorreoElectronico { get; set; } = string.Empty;
 
-        // ==========================================
-        // Contraseña en formato hash (bcrypt)
-        // ==========================================
-        public string ContrasenaHash { get; set; } = string.Empty;
-
+       
         // ==========================================
         // Fecha de creación del registro
         // ==========================================

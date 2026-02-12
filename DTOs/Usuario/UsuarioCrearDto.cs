@@ -8,7 +8,5 @@ public class UsuarioCrearDto
     // Correo electrónico utilizado para autenticación
     public string CorreoElectronico { get; set; } = string.Empty;
 
-    // Contraseña en texto plano enviada desde el cliente
-    // Esta contraseña será transformada a HASH dentro del servicio
-    public string Contrasena { get; set; } = string.Empty;
+   
 }

@@ -14,9 +14,7 @@
         //cuando quieras cambiar el correo
         public string CorreoElectronicoNuevo { get; set; } = string.Empty;
 
-
-        // Nueva contraseña en texto plano (se hashea en el servicio)
-        public string? Contrasena { get; set; }
+            
 
         // Permite activar o desactivar usuario
         public bool Estado { get; set; }

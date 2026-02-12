@@ -26,9 +26,9 @@ namespace MusicBares.Infrastructure.Repositories
 
             string sql = @"
                 INSERT INTO usuario
-                (auth_user_id, nombre_completo, correo_electronico, contrasena_hash, estado)
+                (auth_user_id, nombre_completo, correo_electronico,  estado)
                 VALUES
-                (@AuthUserId, @NombreCompleto, @CorreoElectronico, @ContrasenaHash, @Estado)
+                (@AuthUserId, @NombreCompleto, @CorreoElectronico,  @Estado)
                 RETURNING id_usuario;
             ";
 
@@ -46,8 +46,7 @@ namespace MusicBares.Infrastructure.Repositories
                 SELECT 
                     id_usuario AS IdUsuario,
                     nombre_completo AS NombreCompleto,
-                    correo_electronico AS CorreoElectronico,
-                    contrasena_hash AS ContrasenaHash,
+                    correo_electronico AS CorreoElectronico,                    
                     fecha_creacion AS FechaCreacion,
                     estado AS Estado
                 FROM usuario
@@ -68,8 +67,7 @@ namespace MusicBares.Infrastructure.Repositories
                 SELECT 
                     id_usuario AS IdUsuario,
                     nombre_completo AS NombreCompleto,
-                    correo_electronico AS CorreoElectronico,
-                    contrasena_hash AS ContrasenaHash,
+                    correo_electronico AS CorreoElectronico,                    
                     fecha_creacion AS FechaCreacion,
                     estado AS Estado
                 FROM usuario
@@ -108,8 +106,7 @@ namespace MusicBares.Infrastructure.Repositories
                 UPDATE usuario
                 SET
                     nombre_completo = @NombreCompleto,
-                    correo_electronico = @CorreoElectronico,
-                    contrasena_hash = @ContrasenaHash,
+                    correo_electronico = @CorreoElectronico,                 
                     estado = @Estado
                 WHERE id_usuario = @IdUsuario;
             ";
@@ -130,8 +127,7 @@ namespace MusicBares.Infrastructure.Repositories
                 SELECT 
                     id_usuario AS IdUsuario,
                     nombre_completo AS NombreCompleto,
-                    correo_electronico AS CorreoElectronico,
-                    contrasena_hash AS ContrasenaHash,
+                    correo_electronico AS CorreoElectronico,                    
                     fecha_creacion AS FechaCreacion,
                     estado AS Estado
                 FROM usuario
@@ -188,8 +184,7 @@ namespace MusicBares.Infrastructure.Repositories
                     id_usuario AS IdUsuario,
                     auth_user_id AS AuthUserId,
                     nombre_completo AS NombreCompleto,
-                    correo_electronico AS CorreoElectronico,
-                    contrasena_hash AS ContrasenaHash,
+                    correo_electronico AS CorreoElectronico,                   
                     fecha_creacion AS FechaCreacion,
                     estado AS Estado
                 FROM usuario
