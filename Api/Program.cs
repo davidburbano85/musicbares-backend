@@ -5,9 +5,11 @@ using Microsoft.AspNetCore.HttpOverrides;
 // Permite acceder a configuración del appsettings
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Logging;
+// 🔥 Permite ver errores internos reales de JWT
+
 // Permite validar tokens JWT
 using Microsoft.IdentityModel.Tokens;
-
 // Interfaces del proyecto
 using MusicBares.Application.Interfaces.Context;
 using MusicBares.Application.Interfaces.Repositories;
@@ -17,6 +19,10 @@ using MusicBares.Application.Servicios;
 using MusicBares.Infrastructure.Conexion;
 using MusicBares.Infrastructure.Context;
 using MusicBares.Infrastructure.Repositories;
+using System.IdentityModel.Tokens.Jwt;
+
+// 🔥 Permite ver errores internos reales de JWT
+IdentityModelEventSource.ShowPII = true;
 
 
 // ===========================
@@ -85,7 +91,9 @@ builder.Services.AddScoped<IUsuarioContext, UsuarioContext>();
 // Servicio que obtiene usuario actual desde JWT
 builder.Services.AddScoped<IUsuarioActualServicio, UsuarioActualServicio>();
 
-
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.SetMinimumLevel(LogLevel.Debug);
 /*
 =========================================
 CONFIGURACIÓN AUTENTICACIÓN JWT SUPABASE
@@ -95,8 +103,13 @@ builder.Services
 .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 .AddJwtBearer(options =>
 {
-    // 🔥 Supabase usa OpenID Connect
+    Console.WriteLine("===== CONFIGURANDO JWT =====");
+
     options.Authority = supabaseIssuer;
+    options.RequireHttpsMetadata = true;
+    options.SaveToken = true;
+
+    Console.WriteLine($"Authority configurado: {options.Authority}");
 
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -107,7 +120,6 @@ builder.Services
         ValidAudience = supabaseAudience,
 
         ValidateLifetime = true,
-
         ValidateIssuerSigningKey = true,
 
         ClockSkew = TimeSpan.FromSeconds(30)
@@ -115,55 +127,136 @@ builder.Services
 
     options.Events = new JwtBearerEvents
     {
+
+        // ==========================================
+        // 🔥 CUANDO LLEGA EL TOKEN
+        // ==========================================
         OnMessageReceived = context =>
         {
-            Console.WriteLine("===== JWT DEBUG =====");
+            Console.WriteLine("\n===== JWT MESSAGE RECEIVED =====");
 
             var header = context.Request.Headers["Authorization"].ToString();
 
-            Console.WriteLine($"Authorization header recibido: {header}");
+            Console.WriteLine($"Authorization RAW: {header}");
 
             if (!string.IsNullOrEmpty(header))
             {
                 var token = header.Replace("Bearer ", "");
 
-                Console.WriteLine($"Token length: {token.Length}");
-                Console.WriteLine($"Cantidad puntos: {token.Count(c => c == '.')}");
+                Console.WriteLine($"Token Length: {token.Length}");
+                Console.WriteLine($"Dot Count: {token.Count(c => c == '.')}");
 
-                if (token.Count(c => c == '.') != 2)
-                    Console.WriteLine("⚠️ Token NO tiene formato JWT válido");
+                // 🔥 Intentar leer token SIN validar
+                try
+                {
+                    var handler = new JwtSecurityTokenHandler();
+                    var jwt = handler.ReadJwtToken(token);
+
+                    Console.WriteLine("----- TOKEN HEADER -----");
+                    Console.WriteLine($"Algoritmo: {jwt.Header.Alg}");
+                    Console.WriteLine($"Kid: {jwt.Header.Kid}");
+
+                    Console.WriteLine("----- TOKEN CLAIMS -----");
+                    foreach (var claim in jwt.Claims)
+                    {
+                        Console.WriteLine($"{claim.Type} = {claim.Value}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("❌ Error leyendo JWT sin validar:");
+                    Console.WriteLine(ex);
+                }
             }
 
-            Console.WriteLine("===== FIN JWT DEBUG =====");
+            Console.WriteLine("===== FIN MESSAGE RECEIVED =====\n");
 
             return Task.CompletedTask;
         },
 
+        // ==========================================
+        // 🔥 CUANDO .NET DESCARGA METADATA OPENID
+        // ==========================================
         OnAuthenticationFailed = context =>
         {
-            Console.WriteLine("❌ JWT Authentication Failed");
-            Console.WriteLine(context.Exception);
+            Console.WriteLine("\n❌ AUTHENTICATION FAILED");
+            Console.WriteLine("Exception completa:");
+
+            Console.WriteLine(context.Exception.ToString());
+
+            if (context.Exception.InnerException != null)
+            {
+                Console.WriteLine("\n---- INNER EXCEPTION ----");
+                Console.WriteLine(context.Exception.InnerException);
+            }
+
+            Console.WriteLine("===== FIN AUTH FAILED =====\n");
 
             return Task.CompletedTask;
         },
 
+        // ==========================================
+        // 🔥 TOKEN VALIDADO
+        // ==========================================
         OnTokenValidated = context =>
         {
-            Console.WriteLine("✅ Token validado correctamente");
+            Console.WriteLine("\n✅ TOKEN VALIDADO CORRECTAMENTE");
 
-            var claims = context.Principal.Claims;
+            var jwt = context.SecurityToken as JwtSecurityToken;
 
-            foreach (var claim in claims)
+            if (jwt != null)
             {
-                Console.WriteLine($"{claim.Type}: {claim.Value}");
+                Console.WriteLine($"Algoritmo validado: {jwt.Header.Alg}");
+                Console.WriteLine($"Kid validado: {jwt.Header.Kid}");
+                Console.WriteLine($"Issuer token: {jwt.Issuer}");
+                Console.WriteLine($"Audience token: {string.Join(",", jwt.Audiences)}");
             }
+
+            Console.WriteLine("----- CLAIMS POST VALIDACIÓN -----");
+
+            foreach (var claim in context.Principal.Claims)
+            {
+                Console.WriteLine($"{claim.Type} = {claim.Value}");
+            }
+
+            Console.WriteLine("===== FIN TOKEN VALIDADO =====\n");
+
+            return Task.CompletedTask;
+        },
+
+        // ==========================================
+        // 🔥 CUANDO FALLA AUTORIZACIÓN
+        // ==========================================
+        OnChallenge = context =>
+        {
+            Console.WriteLine("\n⚠️ CHALLENGE ACTIVADO");
+            Console.WriteLine($"Error: {context.Error}");
+            Console.WriteLine($"Description: {context.ErrorDescription}");
+            Console.WriteLine($"Uri: {context.ErrorUri}");
+
+            Console.WriteLine("===== FIN CHALLENGE =====\n");
+
+            return Task.CompletedTask;
+        },
+
+
+        
+
+
+        // ==========================================
+        // 🔥 CUANDO USER NO TIENE PERMISOS
+        // ==========================================
+        OnForbidden = context =>
+        {
+            Console.WriteLine("\n🚫 FORBIDDEN EVENT ACTIVADO");
 
             return Task.CompletedTask;
         }
     };
 
-    options.MapInboundClaims = false;
+    Console.WriteLine("===== FIN CONFIG JWT =====");
 });
+
 
 
 
