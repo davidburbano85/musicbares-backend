@@ -93,15 +93,10 @@ CONFIGURACIÓN AUTENTICACIÓN JWT SUPABASE
 */
 builder.Services
 .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-.AddJwtBearer(async options =>
+.AddJwtBearer(options =>
 {
-    var http = new HttpClient();
-
-    var jwks = await http.GetStringAsync(
-        $"{supabaseIssuer}/.well-known/jwks.json"
-    );
-
-    var keys = new JsonWebKeySet(jwks).GetSigningKeys();
+    // 🔥 Supabase usa OpenID Connect
+    options.Authority = supabaseIssuer;
 
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -114,9 +109,57 @@ builder.Services
         ValidateLifetime = true,
 
         ValidateIssuerSigningKey = true,
-        IssuerSigningKeys = keys,
 
         ClockSkew = TimeSpan.FromSeconds(30)
+    };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            Console.WriteLine("===== JWT DEBUG =====");
+
+            var header = context.Request.Headers["Authorization"].ToString();
+
+            Console.WriteLine($"Authorization header recibido: {header}");
+
+            if (!string.IsNullOrEmpty(header))
+            {
+                var token = header.Replace("Bearer ", "");
+
+                Console.WriteLine($"Token length: {token.Length}");
+                Console.WriteLine($"Cantidad puntos: {token.Count(c => c == '.')}");
+
+                if (token.Count(c => c == '.') != 2)
+                    Console.WriteLine("⚠️ Token NO tiene formato JWT válido");
+            }
+
+            Console.WriteLine("===== FIN JWT DEBUG =====");
+
+            return Task.CompletedTask;
+        },
+
+        OnAuthenticationFailed = context =>
+        {
+            Console.WriteLine("❌ JWT Authentication Failed");
+            Console.WriteLine(context.Exception);
+
+            return Task.CompletedTask;
+        },
+
+        OnTokenValidated = context =>
+        {
+            Console.WriteLine("✅ Token validado correctamente");
+
+            var claims = context.Principal.Claims;
+
+            foreach (var claim in claims)
+            {
+                Console.WriteLine($"{claim.Type}: {claim.Value}");
+            }
+
+            return Task.CompletedTask;
+        }
     };
 
     options.MapInboundClaims = false;
