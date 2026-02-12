@@ -52,8 +52,7 @@ namespace MusicBares.Application.Servicios
                     {
                         AuthUserId = authUserId,
                         NombreCompleto = "Usuario Supabase",
-                        CorreoElectronico = "pendiente@supabase.local",
-                        ContrasenaHash = string.Empty,
+                        CorreoElectronico = "pendiente@supabase.local",                      
                         FechaCreacion = DateTime.UtcNow,
                         Estado = true
                     };
