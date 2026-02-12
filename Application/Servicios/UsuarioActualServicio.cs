@@ -44,19 +44,36 @@ namespace MusicBares.Application.Servicios
 
             var usuario = await _usuarioRepositorio.ObtenerPorAuthIdAsync(authUserId);
 
-            // ⭐ CAMBIO MINIMO → Auto crear usuario si no existe
             if (usuario == null)
             {
-                usuario = new Usuario
+                try
                 {
-                    AuthUserId = authUserId,
-                    Estado = true
-                };
+                    usuario = new Usuario
+                    {
+                        AuthUserId = authUserId,
+                        NombreCompleto = "Usuario Supabase",
+                        CorreoElectronico = "pendiente@supabase.local",
+                        ContrasenaHash = string.Empty,
+                        FechaCreacion = DateTime.UtcNow,
+                        Estado = true
+                    };
 
-                usuario.IdUsuario = await _usuarioRepositorio.CrearAsync(usuario);
+                    usuario.IdUsuario = await _usuarioRepositorio.CrearAsync(usuario);
+                }
+                catch
+                {
+                    // ⭐ Si falló probablemente otro request lo creó
+                    usuario = await _usuarioRepositorio.ObtenerPorAuthIdAsync(authUserId)
+                        ?? throw new Exception("No se pudo obtener el usuario");
+                }
             }
 
             _usuarioCache = usuario;
+
+            Console.WriteLine("===== DEBUG USUARIO ACTUAL =====");
+            Console.WriteLine($"AuthUserId JWT: {authUserId}");
+            Console.WriteLine($"Usuario encontrado: {usuario?.IdUsuario}");
+            Console.WriteLine("================================");
 
             return usuario;
         }
