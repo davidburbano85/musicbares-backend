@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MusicBares.Application.Interfaces.Servicios;
-using MusicBares.Application.Servicios;
 using MusicBares.DTOs.Usuario;
-using MusicBares.Entidades;
 
 namespace MusicBares.API.Controllers
 {
@@ -17,44 +15,22 @@ namespace MusicBares.API.Controllers
             _usuarioServicio = usuarioServicio;
         }
 
-        // 🔹 Crear usuario
-        [HttpPost]
-        public async Task<IActionResult> Crear([FromBody] UsuarioCrearDto dto)
-        {
-            var resultado = await _usuarioServicio.CrearAsync(dto);
-            return Ok(resultado);
-        }
-
-        // 🔹 Login
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] UsuarioLoginDto dto)
-        {
-            var resultado = await _usuarioServicio.LoginAsync(dto);
-            return Ok(resultado);
-        }
-
-        // 🔹 Listar usuarios activos
+        // 🔹 Listar usuarios activos (uso administrativo / pruebas)
         [HttpGet]
         public async Task<IActionResult> Listar()
-        //{
-        //    //var usuarios = await _usuarioServicio.ListarAsync();
-        //    return Ok(usuarios);
-        //}
         {
             try
             {
                 var usuarios = await _usuarioServicio.ListarAsync();
                 return Ok(usuarios);
-    }
+            }
             catch (Exception ex)
             {
                 return StatusCode(500, $"Error interno al listar usuarios: {ex.Message}");
-}
+            }
         }
 
-
-
-        // 🔹 Obtener usuario por id
+        // 🔹 Obtener usuario por ID
         [HttpGet("{idUsuario:int}")]
         public async Task<IActionResult> ObtenerPorId(int idUsuario)
         {
@@ -66,33 +42,29 @@ namespace MusicBares.API.Controllers
             return Ok(usuario);
         }
 
-
-       //Actualizar con Correo electronico
-
+        // 🔹 Actualizar usuario
         [HttpPut("{correoElectronico}")]
-        public async Task<IActionResult> Actualizar(string correoElectronico,[FromBody] UsuarioActualizarDto dto)
+        public async Task<IActionResult> Actualizar(string correoElectronico, [FromBody] UsuarioActualizarDto dto)
+        {
+            try
             {
-                try
-                {
-                    if (!string.Equals(correoElectronico, dto.CorreoElectronico, StringComparison.OrdinalIgnoreCase))
-                        return BadRequest("El correo electrónico no coincide.");
+                if (!string.Equals(correoElectronico, dto.CorreoElectronico, StringComparison.OrdinalIgnoreCase))
+                    return BadRequest("El correo electrónico no coincide.");
 
-                    var resultado = await _usuarioServicio.ActualizarAsync(dto);
+                var resultado = await _usuarioServicio.ActualizarAsync(dto);
 
-                    if (!resultado.Exitoso)
-                        return BadRequest(resultado);
+                if (!resultado.Exitoso)
+                    return BadRequest(resultado);
 
-                    return Ok(resultado);
-                }
-                catch (Exception ex)
-                {
-                    return StatusCode(500, $"Error interno al actualizar el usuario: {ex.Message}");
-                }
+                return Ok(resultado);
             }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno al actualizar el usuario: {ex.Message}");
+            }
+        }
 
-
-
-        // 🔥 Eliminar usuario (lógico)
+        // 🔥 Eliminación lógica
         [HttpDelete("{idUsuario:int}")]
         public async Task<IActionResult> Eliminar(int idUsuario)
         {

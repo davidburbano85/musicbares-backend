@@ -17,41 +17,8 @@ namespace MusicBares.API.Controllers
             _barServicio = barServicio;
         }
 
-        // =====================================================
-        // Ping API
-        // =====================================================
-        [HttpGet("ping")]
-        [AllowAnonymous]
-        public IActionResult Ping()
-        {
-            return Ok("API funcionando correctamente");
-        }
-
-        // =====================================================
-        // Debug Token
-        // =====================================================
-        [HttpGet("debug-token")]
-        [AllowAnonymous]
-        public IActionResult DebugToken()
-        {
-            var header = Request.Headers["Authorization"].ToString();
-
-            string token = null;
-
-            if (!string.IsNullOrWhiteSpace(header) && header.StartsWith("Bearer "))
-            {
-                token = header.Substring("Bearer ".Length);
-            }
-
-            return Ok(new
-            {
-                HeaderCompleto = header,
-                TokenExtraido = token,
-                LargoToken = token?.Length,
-                TienePuntos = token?.Count(c => c == '.')
-            });
-        }
-
+    
+     
         // ================================
         // Crear bar
         // ================================
@@ -139,52 +106,7 @@ namespace MusicBares.API.Controllers
             }
         }
 
-        // =====================================================
-        // Debug Auth
-        // =====================================================
-        [HttpGet("debug-auth")]
-        public IActionResult DebugAuth()
-        {
-            var claims = User.Claims.Select(c => new
-            {
-                c.Type,
-                c.Value
-            });
-
-            return Ok(claims);
-        }
-
-        [HttpGet("whoami")]
-        public IActionResult WhoAmI()
-        {
-            var claims = User.Claims
-                .Select(c => new { c.Type, c.Value })
-                .ToList();
-
-            return Ok(new
-            {
-                autenticado = User.Identity?.IsAuthenticated,
-                claims = claims
-            });
-        }
-
-        // =====================================================
-        // Debug Config
-        // =====================================================
-        [HttpGet("debug-config")]
-        [AllowAnonymous]
-        public IActionResult DebugConfig([FromServices] IConfiguration config)
-        {
-            var issuer = config["Supabase:Issuer"];
-            var audience = config["Supabase:Audience"];
-            var url = config["Supabase:Url"];
-
-            return Ok(new
-            {
-                issuer,
-                audience,
-                url
-            });
-        }
+       
+      
     }
 }
