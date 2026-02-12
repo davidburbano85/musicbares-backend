@@ -150,10 +150,15 @@ namespace MusicBares.Application.Servicios
                 if (usuario == null)
                     return new UsuarioRespuestaDto(false, "Usuario no encontrado.");
 
-                // 2. Verificar contraseña
-                if (!BCrypt.Net.BCrypt.Verify(dto.Contrasena, usuario.ContrasenaHash))
-                    return new UsuarioRespuestaDto(false, "Contraseña incorrecta.");
+                // 2. Verificar contraseña SOLO si existe hash local
+                if (!string.IsNullOrWhiteSpace(usuario.ContrasenaHash))
+                {
+                    if (string.IsNullOrWhiteSpace(dto.Contrasena))
+                        return new UsuarioRespuestaDto(false, "Debe enviar la contraseña actual.");
 
+                    if (!BCrypt.Net.BCrypt.Verify(dto.Contrasena, usuario.ContrasenaHash))
+                        return new UsuarioRespuestaDto(false, "Contraseña incorrecta.");
+                }
                 // 3. Si quiere cambiar el correo, validar que no exista
                 if (!string.IsNullOrWhiteSpace(dto.CorreoElectronicoNuevo) &&
                     !dto.CorreoElectronicoNuevo.Equals(usuario.CorreoElectronico, StringComparison.OrdinalIgnoreCase))
