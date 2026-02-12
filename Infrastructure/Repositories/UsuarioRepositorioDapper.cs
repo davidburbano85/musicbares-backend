@@ -26,13 +26,12 @@ namespace MusicBares.Infrastructure.Repositories
 
             string sql = @"
                 INSERT INTO usuario
-                (nombre_completo, correo_electronico, contrasena_hash, estado)
+                (auth_user_id, nombre_completo, correo_electronico, contrasena_hash, estado)
                 VALUES
-                (@NombreCompleto, @CorreoElectronico, @ContrasenaHash, @Estado)
+                (@AuthUserId, @NombreCompleto, @CorreoElectronico, @ContrasenaHash, @Estado)
                 RETURNING id_usuario;
             ";
 
-            // Ejecuta el INSERT y retorna el id generado
             return await conexion.ExecuteScalarAsync<int>(sql, usuario);
         }
 
@@ -180,25 +179,30 @@ namespace MusicBares.Infrastructure.Repositories
         }
 
         // Busca usuario usando auth_user_id
+        // Busca usuario usando auth_user_id
         public async Task<Usuario?> ObtenerPorAuthIdAsync(Guid authUserId)
         {
             // Consulta SQL para buscar usuario por auth_user_id
             var sql = @"
-                SELECT *
+                SELECT
+                    id_usuario AS IdUsuario,
+                    auth_user_id AS AuthUserId,
+                    nombre_completo AS NombreCompleto,
+                    correo_electronico AS CorreoElectronico,
+                    contrasena_hash AS ContrasenaHash,
+                    fecha_creacion AS FechaCreacion,
+                    estado AS Estado
                 FROM usuario
                 WHERE auth_user_id = @AuthUserId
             ";
 
-            // Abre una conexión usando la fábrica
             using var conexion = _fabricaConexion.CrearConexion();
 
-            // Ejecuta la consulta y mapea el resultado a la entidad Usuario
             var usuario = await conexion.QueryFirstOrDefaultAsync<Usuario>(
                 sql,
-                new { AuthUserId = authUserId } // Parámetro seguro contra SQL Injection
+                new { AuthUserId = authUserId }
             );
 
-            // Retorna el usuario encontrado o null
             return usuario;
         }
 

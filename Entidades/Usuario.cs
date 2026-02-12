@@ -7,7 +7,7 @@
         // ==========================================
         public int IdUsuario { get; set; }
 
-        public  Guid auth_user_id {  get; set; }
+        public  Guid AuthUserId {  get; set; }
         // ==========================================
         // Nombre completo del usuario
         // ==========================================

@@ -37,21 +37,25 @@ namespace MusicBares.Application.Servicios
         // Obtiene la entidad completa del usuario autenticado
         public async Task<Usuario> ObtenerUsuarioAsync()
         {
-            // Si ya fue consultado durante el request se retorna cache
             if (_usuarioCache != null)
                 return _usuarioCache;
 
-            // Obtiene auth_user_id desde JWT
             var authUserId = _usuarioContext.ObtenerAuthUserId();
 
-            // Busca usuario en base de datos
             var usuario = await _usuarioRepositorio.ObtenerPorAuthIdAsync(authUserId);
 
-            // Si no existe usuario se lanza excepción
+            // ⭐ CAMBIO MINIMO → Auto crear usuario si no existe
             if (usuario == null)
-                throw new Exception("El usuario autenticado no existe en el sistema");
+            {
+                usuario = new Usuario
+                {
+                    AuthUserId = authUserId,
+                    Estado = true
+                };
 
-            // Guarda en cache
+                usuario.IdUsuario = await _usuarioRepositorio.CrearAsync(usuario);
+            }
+
             _usuarioCache = usuario;
 
             return usuario;

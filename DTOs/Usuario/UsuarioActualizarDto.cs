@@ -9,7 +9,7 @@
         // Nuevo nombre del usuario
         public string NombreCompleto { get; set; } = string.Empty;
 
-        // Nuevo correo del usuario
+        // Nuevo correo del usuarioa
         public string CorreoElectronico { get; set; } = string.Empty;
         //cuando quieras cambiar el correo
         public string CorreoElectronicoNuevo { get; set; } = string.Empty;

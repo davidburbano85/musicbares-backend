@@ -46,7 +46,11 @@ namespace MusicBares.Application.Servicios
                     NombreCompleto = dto.NombreCompleto,
                     CorreoElectronico = dto.CorreoElectronico,
                     ContrasenaHash = hash,
-                    Estado = true
+                    Estado = true,
+
+                    // 🔥 IMPORTANTE:
+                    // AuthUserId se llenará luego desde Supabase JWT
+                    AuthUserId = Guid.Empty
                 };
 
                 var id = await _usuarioRepositorio.CrearAsync(usuario);
