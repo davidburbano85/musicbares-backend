@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using MusicBares.Application.Interfaces.Servicios;
 using MusicBares.DTOs.Mesa;
 
@@ -6,23 +7,18 @@ namespace MusicBares.API.Controllers
 {
     [ApiController]
     [Route("api/mesa")]
+    [Authorize] // 🔐 Todas las mesas requieren usuario autenticado
     public class MesaController : ControllerBase
     {
-        // ==========================================
-        // Servicio de mesa (lógica de negocio)
-        // ==========================================
         private readonly IMesaServicio _mesaServicio;
 
-        // ==========================================
-        // Constructor con inyección de dependencias
-        // ==========================================
         public MesaController(IMesaServicio mesaServicio)
         {
             _mesaServicio = mesaServicio;
         }
 
         // ==========================================
-        // Crear una nueva mesa
+        // Crear mesa
         // ==========================================
         [HttpPost]
         public async Task<IActionResult> Crear([FromBody] MesaCrearDto dto)
@@ -60,42 +56,10 @@ namespace MusicBares.API.Controllers
         }
 
         // ==========================================
-        // Listar todas las mesas (administrativo)
-        // ==========================================
-        [HttpGet]
-        public async Task<IActionResult> Listar()
-        {
-            try
-            {
-                var mesas = await _mesaServicio.ListarAsync();
-                return Ok(mesas);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error interno al listar mesas: {ex.Message}");
-            }
-        }
-
-        // ==========================================
-        // Obtener mesas por bar
-        // ==========================================
-        [HttpGet("bar/{idBar}")]
-        public async Task<IActionResult> ObtenerPorBar(int idBar)
-        {
-            try
-            {
-                var mesas = await _mesaServicio.ObtenerPorBarAsync(idBar);
-                return Ok(mesas);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error interno al obtener mesas del bar: {ex.Message}");
-            }
-        }
-
-        // ==========================================
         // Obtener mesa por código QR
+        // Flujo público para clientes
         // ==========================================
+        [AllowAnonymous]
         [HttpGet("qr/{codigoQR}")]
         public async Task<IActionResult> ObtenerPorCodigoQR(string codigoQR)
         {
@@ -133,5 +97,14 @@ namespace MusicBares.API.Controllers
                 return StatusCode(500, $"Error interno al actualizar la mesa: {ex.Message}");
             }
         }
+
+
+        [HttpGet("mis-mesas")]
+        public async Task<IActionResult> ObtenerMisMesas()
+        {
+            var mesas = await _mesaServicio.ObtenerPorBarAsync(0); // Ignora el parámetro
+            return Ok(mesas);
+        }
+
     }
 }

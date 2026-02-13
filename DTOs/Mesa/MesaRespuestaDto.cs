@@ -42,6 +42,6 @@
         // Fecha en la que se creó la mesa
         // Útil para auditoría o historial
         // ----------------------------------------------
-        public DateTime FechaCreacion { get; set; }
+       
     }
 }

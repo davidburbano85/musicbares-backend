@@ -5,210 +5,172 @@ using MusicBares.Entidades;
 
 namespace MusicBares.Application.Servicios
 {
-    // ======================================================
-    // Implementación concreta del servicio de Mesa
-    // Aquí vive la LÓGICA DE NEGOCIO
-    // ======================================================
+    // Servicio de lógica de negocio para Mesas (versión segura)
     public class MesaServicio : IMesaServicio
     {
-        // ----------------------------------------------
-        // Repositorio de mesas (acceso a BD)
-        // ----------------------------------------------
         private readonly IMesaRepositorio _mesaRepositorio;
+        private readonly IBarRepositorio _barRepositorio;
+        private readonly IUsuarioActualServicio _usuarioActualServicio;
 
-        // ----------------------------------------------
-        // Constructor con inyección de dependencias
-        // ASP.NET se encarga de pasar el repositorio
-        // ----------------------------------------------
-        public MesaServicio(IMesaRepositorio mesaRepositorio)
+        public MesaServicio(
+            IMesaRepositorio mesaRepositorio,
+            IBarRepositorio barRepositorio,
+            IUsuarioActualServicio usuarioActualServicio)
         {
             _mesaRepositorio = mesaRepositorio;
+            _barRepositorio = barRepositorio;
+            _usuarioActualServicio = usuarioActualServicio;
         }
 
-        // ======================================================
+        // ==============================
         // CREAR MESA
-        // ======================================================
+        // ==============================
         public async Task<MesaRespuestaDto> CrearAsync(MesaCrearDto dto)
         {
-            // ----------------------------------------------
-            // 1. Validar datos mínimos
-            // ----------------------------------------------
-            if (dto.NumeroMesa <= 0)
-                throw new Exception("El número de mesa debe ser mayor a cero.");
-
-            // ----------------------------------------------
-            // 2. Verificar que no exista el mismo número
-            //    de mesa dentro del mismo bar
-            // ----------------------------------------------
-            bool existeNumero = await _mesaRepositorio
-                .ExisteNumeroMesaAsync(dto.IdBar, dto.NumeroMesa);
-
-            if (existeNumero)
-                throw new Exception("Ya existe una mesa con ese número en el bar.");
-
-            // ----------------------------------------------
-            // 3. Crear la entidad Mesa
-            //    (modelo de dominio)
-            // ----------------------------------------------
-            var mesa = new Mesa
+            try
             {
-                NumeroMesa = dto.NumeroMesa,
-                IdBar = dto.IdBar,
-                CodigoQR = dto.CodigoQR,
-                Estado = true
-                // FechaCreacion normalmente la pone la BD
-            };
+                int idUsuario = await _usuarioActualServicio.ObtenerIdUsuarioAsync();
+                var bar = (await _barRepositorio.ObtenerPorUsuarioAsync(idUsuario)).FirstOrDefault();
 
-            // ----------------------------------------------
-            // 4. Guardar en base de datos
-            // ----------------------------------------------
-            int idGenerado = await _mesaRepositorio.CrearAsync(mesa);
+                if (bar == null)
+                    return new MesaRespuestaDto { Estado = false };
 
-            // ----------------------------------------------
-            // 5. Retornar DTO de respuesta
-            // ----------------------------------------------
-            return new MesaRespuestaDto
+                // Validar número repetido
+                bool numeroExiste = await _mesaRepositorio.ExisteNumeroMesaAsync(bar.IdBar, dto.NumeroMesa);
+                if (numeroExiste)
+                    return new MesaRespuestaDto { Estado = false, IdBar = bar.IdBar };
+
+                var mesa = new Mesa
+                {
+                    NumeroMesa = dto.NumeroMesa,
+                    IdBar = bar.IdBar,
+                    CodigoQR = dto.CodigoQR,
+                    Estado = true
+                };
+
+                int idMesa = await _mesaRepositorio.CrearAsync(mesa);
+
+                return new MesaRespuestaDto
+                {
+                    IdMesa = idMesa,
+                    NumeroMesa = mesa.NumeroMesa,
+                    IdBar = mesa.IdBar,
+                    CodigoQR = mesa.CodigoQR,
+                    Estado = mesa.Estado
+                };
+            }
+            catch
             {
-                IdMesa = idGenerado,
-                NumeroMesa = mesa.NumeroMesa,
-                IdBar = mesa.IdBar,
-                CodigoQR = mesa.CodigoQR,
-                Estado = mesa.Estado,
-                FechaCreacion = DateTime.UtcNow
-            };
+                return new MesaRespuestaDto { Estado = false };
+            }
         }
 
-        // ======================================================
+        // ==============================
         // OBTENER MESA POR ID
-        // ======================================================
+        // ==============================
         public async Task<MesaRespuestaDto?> ObtenerPorIdAsync(int idMesa)
         {
-            // ----------------------------------------------
-            // 1. Consultar repositorio
-            // ----------------------------------------------
             var mesa = await _mesaRepositorio.ObtenerPorIdAsync(idMesa);
-
-            // ----------------------------------------------
-            // 2. Si no existe, retornar null
-            // ----------------------------------------------
             if (mesa == null)
                 return null;
 
-            // ----------------------------------------------
-            // 3. Mapear entidad → DTO
-            // ----------------------------------------------
+            // Validar que la mesa pertenezca al bar del usuario
+            int idUsuario = await _usuarioActualServicio.ObtenerIdUsuarioAsync();
+            var bar = (await _barRepositorio.ObtenerPorUsuarioAsync(idUsuario)).FirstOrDefault();
+            if (bar == null || !(await _mesaRepositorio.ExisteMesaBarAsync(idMesa, bar.IdBar)))
+                return null;
+
             return new MesaRespuestaDto
             {
                 IdMesa = mesa.IdMesa,
                 NumeroMesa = mesa.NumeroMesa,
                 IdBar = mesa.IdBar,
                 CodigoQR = mesa.CodigoQR,
-                Estado = mesa.Estado,
+                Estado = mesa.Estado
             };
         }
 
-        // ======================================================
+        // ==============================
         // OBTENER MESAS POR BAR
-        // ======================================================
-        public async Task<IEnumerable<MesaListadoDto>> ObtenerPorBarAsync(int idBar)
+        // ==============================
+        public async Task<IEnumerable<MesaListadoDto>> ObtenerPorBarAsync(int unusedIdBar)
         {
-            // ----------------------------------------------
-            // 1. Obtener mesas del repositorio
-            // ----------------------------------------------
-            var mesas = await _mesaRepositorio.ObtenerPorBarAsync(idBar);
+            // Ignoramos el parámetro externo
+            int idUsuario = await _usuarioActualServicio.ObtenerIdUsuarioAsync();
+            var bar = (await _barRepositorio.ObtenerPorUsuarioAsync(idUsuario)).FirstOrDefault();
+            if (bar == null)
+                return Enumerable.Empty<MesaListadoDto>();
 
-            // ----------------------------------------------
-            // 2. Mapear cada entidad a DTO de listado
-            // ----------------------------------------------
+            var mesas = await _mesaRepositorio.ObtenerPorBarAsync(bar.IdBar);
+
             return mesas.Select(m => new MesaListadoDto
             {
                 IdMesa = m.IdMesa,
                 NumeroMesa = m.NumeroMesa,
+                IdBar = m.IdBar,
+                CodigoQR = m.CodigoQR,
                 Estado = m.Estado
             });
         }
 
-        // ======================================================
+        // ==============================
         // OBTENER MESA POR CÓDIGO QR
-        // ======================================================
+        // ==============================
         public async Task<MesaRespuestaDto?> ObtenerPorCodigoQRAsync(string codigoQR)
         {
-            // ----------------------------------------------
-            // 1. Buscar mesa por QR
-            // ----------------------------------------------
             var mesa = await _mesaRepositorio.ObtenerPorCodigoQRAsync(codigoQR);
-
-            // ----------------------------------------------
-            // 2. Validar existencia
-            // ----------------------------------------------
             if (mesa == null)
                 return null;
 
-            // ----------------------------------------------
-            // 3. Mapear y retornar
-            // ----------------------------------------------
             return new MesaRespuestaDto
             {
                 IdMesa = mesa.IdMesa,
                 NumeroMesa = mesa.NumeroMesa,
                 IdBar = mesa.IdBar,
                 CodigoQR = mesa.CodigoQR,
-                Estado = mesa.Estado,
+                Estado = mesa.Estado
             };
         }
 
-        // ======================================================
+        // ==============================
         // ACTUALIZAR MESA
-        // ======================================================
+        // ==============================
         public async Task<MesaRespuestaDto> ActualizarAsync(MesaActualizarDto dto)
         {
-            // ----------------------------------------------
-            // 1. Obtener mesa existente
-            // ----------------------------------------------
-            var mesa = await _mesaRepositorio.ObtenerPorIdAsync(dto.IdMesa);
-
-            if (mesa == null)
-                throw new Exception("La mesa no existe.");
-
-            // ----------------------------------------------
-            // 2. Actualizar campos permitidos
-            // ----------------------------------------------
-            mesa.NumeroMesa = dto.NumeroMesa;
-            mesa.Estado = dto.Estado;
-
-            // ----------------------------------------------
-            // 3. Guardar cambios
-            // ----------------------------------------------
-            await _mesaRepositorio.ActualizarAsync(mesa);
-
-            // ----------------------------------------------
-            // 4. Retornar respuesta
-            // ----------------------------------------------
-            return new MesaRespuestaDto
+            try
             {
-                IdMesa = mesa.IdMesa,
-                NumeroMesa = mesa.NumeroMesa,
-                IdBar = mesa.IdBar,
-                CodigoQR = mesa.CodigoQR,
-                Estado = mesa.Estado,
-            };
-        }
+                var mesa = await _mesaRepositorio.ObtenerPorIdAsync(dto.IdMesa);
+                if (mesa == null)
+                    return new MesaRespuestaDto { Estado = false };
 
-        // ======================================================
-        // LISTAR TODAS LAS MESAS ACTIVAS
-        // ======================================================
-        public async Task<IEnumerable<MesaListadoDto>> ListarAsync()
-        {
-            var mesas = await _mesaRepositorio.ListarAsync();
+                // Validar que la mesa pertenezca al bar del usuario
+                int idUsuario = await _usuarioActualServicio.ObtenerIdUsuarioAsync();
+                var bar = (await _barRepositorio.ObtenerPorUsuarioAsync(idUsuario)).FirstOrDefault();
+                if (bar == null || !(await _mesaRepositorio.ExisteMesaBarAsync(dto.IdMesa, bar.IdBar)))
+                    return new MesaRespuestaDto { Estado = false };
 
-            return mesas.Select(m => new MesaListadoDto
+                // Actualizar datos
+                mesa.NumeroMesa = dto.NumeroMesa;
+                mesa.CodigoQR = dto.CodigoQR;
+                mesa.Estado = dto.Estado;
+
+                bool actualizado = await _mesaRepositorio.ActualizarAsync(mesa);
+                if (!actualizado)
+                    return new MesaRespuestaDto { Estado = false };
+
+                return new MesaRespuestaDto
+                {
+                    IdMesa = mesa.IdMesa,
+                    NumeroMesa = mesa.NumeroMesa,
+                    IdBar = mesa.IdBar,
+                    CodigoQR = mesa.CodigoQR,
+                    Estado = mesa.Estado
+                };
+            }
+            catch
             {
-                IdMesa = m.IdMesa,
-                NumeroMesa = m.NumeroMesa,
-                Estado = m.Estado,
-                IdBar= m.IdBar,
-                CodigoQR= m.CodigoQR,
-            });
+                return new MesaRespuestaDto { Estado = false };
+            }
         }
     }
 }

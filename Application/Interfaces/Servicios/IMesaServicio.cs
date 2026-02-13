@@ -38,10 +38,6 @@ namespace MusicBares.Application.Interfaces.Servicios
         // ======================================================
         Task<MesaRespuestaDto> ActualizarAsync(MesaActualizarDto dto);
 
-        // ======================================================
-        // Lista todas las mesas activas del sistema
-        // Uso administrativo
-        // ======================================================
-        Task<IEnumerable<MesaListadoDto>> ListarAsync();
+       
     }
 }

@@ -174,24 +174,7 @@ namespace MusicBares.Infrastructure.Repositories
         // ======================================================
         // LISTAR MESAS ACTIVAS
         // ======================================================
-        public async Task<IEnumerable<Mesa>> ListarAsync()
-        {
-            using var conexion = _fabricaConexion.CrearConexion();
-
-            string sql = @"
-                SELECT
-                    id_mesa     AS IdMesa,
-                    numero_mesa AS NumeroMesa,
-                    id_bar      AS IdBar,
-                    codigo_qr   AS CodigoQR,
-                    estado      AS Estado
-                FROM mesa
-                WHERE estado = true;
-            ";
-
-            return await conexion.QueryAsync<Mesa>(sql);
-        }
-
+       
         public async Task<bool> ExisteMesaAsync(int idMesa)
         {
             using var conexion = _fabricaConexion.CrearConexion();
