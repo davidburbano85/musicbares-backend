@@ -1,4 +1,5 @@
 ﻿using MusicBares.DTOs.VideoMesa;
+using MusicBares.Entidades;
 
 namespace MusicBares.Application.Interfaces.Servicios
 {
@@ -36,6 +37,7 @@ namespace MusicBares.Application.Interfaces.Servicios
         // Toma el siguiente video a reproducir y marca como "Reproduciendo"
         // =============================================
         Task<VideoMesaRespuestaDto?> TomarSiguienteVideoAsync(int idBar);
+       
 
 
     }
