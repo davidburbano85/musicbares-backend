@@ -1,4 +1,4 @@
-﻿using Dapper;
+﻿ using Dapper;
 using MusicBares.Application.Interfaces.Repositories;
 using MusicBares.Entidades;
 using MusicBares.Infrastructure.Conexion;
@@ -224,7 +224,77 @@ namespace MusicBares.Infrastructure.Repositories
             );
         }
 
-       
+
+        public async Task<VideoMesa?> TomarSiguienteVideoAsync(int idBar)
+        {
+            using var conexion = _fabricaConexion.CrearConexion();
+
+            // 1️⃣ Obtener última mesa que reprodujo
+            string sqlUltimaMesa = @"
+                SELECT id_ultima_mesa_reproduciendo
+                FROM bar
+                WHERE id_bar = @idBar;
+            ";
+
+            int? idUltimaMesa = await conexion.ExecuteScalarAsync<int?>(sqlUltimaMesa, new { idBar });
+
+            // 2️⃣ Obtener siguiente mesa con video pendiente
+            string sqlSiguienteMesa = @"
+                SELECT vm.id_mesa
+                FROM videos_mesa vm
+                INNER JOIN mesa m ON m.id_mesa = vm.id_mesa
+                WHERE m.id_bar = @idBar
+                  AND vm.estado_reproduccion = 'Pendiente'
+                  AND (@idUltimaMesa IS NULL OR vm.id_mesa > @idUltimaMesa)
+                ORDER BY vm.id_mesa ASC
+                LIMIT 1;
+            ";
+
+            int? idSiguienteMesa = await conexion.ExecuteScalarAsync<int?>(sqlSiguienteMesa, new { idBar, idUltimaMesa });
+
+            // Si no hay mesa > idUltimaMesa, tomar la primera mesa con video pendiente
+            if (idSiguienteMesa == null)
+            {
+                string sqlPrimerMesa = @"
+                    SELECT vm.id_mesa
+                    FROM videos_mesa vm
+                    INNER JOIN mesa m ON m.id_mesa = vm.id_mesa
+                    WHERE m.id_bar = @idBar
+                      AND vm.estado_reproduccion = 'Pendiente'
+                    ORDER BY vm.id_mesa ASC
+                    LIMIT 1;
+                ";
+                idSiguienteMesa = await conexion.ExecuteScalarAsync<int?>(sqlPrimerMesa, new { idBar });
+            }
+
+            if (idSiguienteMesa == null)
+                return null; // No hay videos pendientes
+
+            // 3️⃣ Tomar el primer video pendiente de esa mesa
+            string sqlVideo = @"
+                SELECT *
+                FROM videos_mesa
+                WHERE id_mesa = @idMesa
+                  AND estado_reproduccion = 'Pendiente'
+                ORDER BY fecha_solicitud ASC
+                LIMIT 1;
+            ";
+
+            var video = await conexion.QueryFirstOrDefaultAsync<VideoMesa>(sqlVideo, new { idMesa = idSiguienteMesa });
+
+            if (video == null)
+                return null;
+
+            // 4️⃣ Actualizar id_ultima_mesa_reproduciendo en bar
+            string sqlActualizar = @"
+                    UPDATE bar
+                    SET id_ultima_mesa_reproduciendo = @idMesa
+                    WHERE id_bar = @idBar;
+                ";
+            await conexion.ExecuteAsync(sqlActualizar, new { idMesa = idSiguienteMesa, idBar });
+
+            return video;
+        }
 
     }
 }

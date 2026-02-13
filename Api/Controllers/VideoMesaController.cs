@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using MusicBares.Application.Interfaces.Servicios;
 using MusicBares.DTOs.VideoMesa;
 
@@ -8,15 +9,14 @@ namespace MusicBares.API.Controllers
     // Controller encargado de exponer endpoints REST relacionados
     // a solicitudes de videos realizadas desde mesas.
     // ============================================================
-    [ApiController] // Indica que es un controlador Web API
-    [Route("api/[controller]")] // Ruta base -> api/VideoMesa
+    [ApiController]
+    [Route("api/[controller]")]
     public class VideoMesaController : ControllerBase
     {
-        // Servicio de capa Application
         private readonly IVideoMesaServicio _servicio;
 
         // ============================================================
-        // Constructor con Inyección de Dependencias
+        // Constructor con inyección de dependencias
         // ============================================================
         public VideoMesaController(IVideoMesaServicio servicio)
         {
@@ -26,10 +26,12 @@ namespace MusicBares.API.Controllers
         // ============================================================
         // 1️⃣ Registrar múltiples videos para una mesa
         // POST: api/VideoMesa/registrar-multiples
+        // Las mesas/usuarios no necesitan estar autenticados
         // ============================================================
+        [AllowAnonymous]
         [HttpPost("registrar-multiples")]
         public async Task<IActionResult> RegistrarMultiplesVideos(
-      [FromBody] VideoMesaMultipleDto request)
+            [FromBody] VideoMesaMultipleDto request)
         {
             try
             {
@@ -56,7 +58,6 @@ namespace MusicBares.API.Controllers
                     };
 
                     var creado = await _servicio.CrearAsync(dto);
-
                     resultados.Add(creado);
                 }
 
@@ -69,7 +70,7 @@ namespace MusicBares.API.Controllers
         }
 
         // ============================================================
-        // 2️⃣ Obtener videos solicitados por una mesa
+        // 2️⃣ Obtener videos de una mesa
         // GET: api/VideoMesa/mesa/{idMesa}
         // ============================================================
         [HttpGet("mesa/{idMesa:int}")]
@@ -119,27 +120,28 @@ namespace MusicBares.API.Controllers
         }
 
         // ============================================================
-        // 4️⃣ Obtener siguiente video del bar
-        // GET: api/VideoMesa/siguiente/{idBar}
+        // 4️⃣ Tomar siguiente video automáticamente (round-robin)
+        // GET: api/VideoMesa/tomar-siguiente/{idBar}
         // ============================================================
-        [HttpGet("siguiente/{idBar:int}")]
-        public async Task<IActionResult> ObtenerSiguiente(int idBar)
+        [AllowAnonymous] // cualquier mesa/usuario puede solicitar
+        [HttpGet("tomar-siguiente/{idBar:int}")]
+        public async Task<IActionResult> TomarSiguienteVideo(int idBar)
         {
             try
             {
                 if (idBar <= 0)
                     return BadRequest("IdBar inválido.");
 
-                var video = await _servicio.ObtenerSiguienteAsync(idBar);
+                var video = await _servicio.TomarSiguienteVideoAsync(idBar);
 
                 if (video == null)
-                    return NotFound("No existen videos pendientes.");
+                    return NotFound("No hay videos pendientes.");
 
                 return Ok(video);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return StatusCode(500, $"Error interno al obtener siguiente video: {ex.Message}");
             }
         }
 
@@ -147,6 +149,7 @@ namespace MusicBares.API.Controllers
         // 5️⃣ Marcar video como reproduciendo
         // PUT: api/VideoMesa/reproduciendo/{idVideo}
         // ============================================================
+        [Authorize] // solo el dueño puede actualizar
         [HttpPut("reproduciendo/{idVideo:int}")]
         public async Task<IActionResult> MarcarComoReproduciendo(int idVideo)
         {
@@ -155,8 +158,7 @@ namespace MusicBares.API.Controllers
                 if (idVideo <= 0)
                     return BadRequest("IdVideo inválido.");
 
-                bool resultado = await _servicio
-                    .MarcarComoReproduciendoAsync(idVideo);
+                bool resultado = await _servicio.MarcarComoReproduciendoAsync(idVideo);
 
                 if (!resultado)
                     return NotFound("Video no encontrado.");
@@ -170,9 +172,10 @@ namespace MusicBares.API.Controllers
         }
 
         // ============================================================
-        // 6️⃣ Eliminar solicitud de video
+        // 6️⃣ Eliminar video
         // DELETE: api/VideoMesa/{idVideo}
         // ============================================================
+        [Authorize] // solo el dueño puede eliminar
         [HttpDelete("{idVideo:int}")]
         public async Task<IActionResult> Eliminar(int idVideo)
         {

@@ -56,16 +56,19 @@ namespace MusicBares.API.Controllers
         }
 
         // ==========================================
-        // Obtener mesa por código QR
+        // Obtener mesa por código QR o código interno
         // Flujo público para clientes
         // ==========================================
         [AllowAnonymous]
-        [HttpGet("qr/{codigoQR}")]
+        [HttpGet("qr/{*codigoQR}")] // <--- Nota el '*' para capturar toda la cadena, incluso con '/'
         public async Task<IActionResult> ObtenerPorCodigoQR(string codigoQR)
         {
             try
             {
-                var mesa = await _mesaServicio.ObtenerPorCodigoQRAsync(codigoQR);
+                // Decodificamos el valor por seguridad (si venía URL encoded)
+                var codigo = Uri.UnescapeDataString(codigoQR);
+
+                var mesa = await _mesaServicio.ObtenerPorCodigoQRAsync(codigo);
 
                 if (mesa == null)
                     return NotFound("Mesa no encontrada");
@@ -77,7 +80,6 @@ namespace MusicBares.API.Controllers
                 return StatusCode(500, $"Error interno al obtener mesa por QR: {ex.Message}");
             }
         }
-
         // ==========================================
         // Actualizar mesa
         // ==========================================

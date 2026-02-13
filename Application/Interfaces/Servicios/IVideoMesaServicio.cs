@@ -32,6 +32,11 @@ namespace MusicBares.Application.Interfaces.Servicios
 
         Task<bool> MarcarComoReproduciendoAsync(int idVideo);
 
+        // =============================================
+        // Toma el siguiente video a reproducir y marca como "Reproduciendo"
+        // =============================================
+        Task<VideoMesaRespuestaDto?> TomarSiguienteVideoAsync(int idBar);
+
 
     }
 }
