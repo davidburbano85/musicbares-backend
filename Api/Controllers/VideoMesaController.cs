@@ -1,5 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using MusicBares.Application.Interfaces.Repositories;
 using MusicBares.Application.Interfaces.Servicios;
 using MusicBares.DTOs.VideoMesa;
 
@@ -10,47 +11,65 @@ namespace MusicBares.API.Controllers
     public class VideoMesaController : ControllerBase
     {
         private readonly IVideoMesaServicio _servicio;
+        private readonly IMesaRepositorio _mesaRepositorio;
 
-        public VideoMesaController(IVideoMesaServicio servicio)
+        public VideoMesaController(IVideoMesaServicio servicio,
+                                   IMesaRepositorio mesaRepositorio)
         {
             _servicio = servicio;
+            _mesaRepositorio = mesaRepositorio;
         }
 
         // =========================================================
         // 1️⃣ Cliente: Registrar múltiples videos desde su mesa
         // POST: api/VideoMesa/registrar-multiples
         // =========================================================
-        [HttpPost("registrar-multiples")]
-        [AllowAnonymous] // Público desde la mesa
-        public async Task<IActionResult> RegistrarMultiplesVideos([FromBody] VideoMesaMultipleDto request)
+        // =========================================================
+        // 1️⃣ Cliente: Registrar múltiples videos desde su mesa usando CodigoMesa
+        // POST: api/VideoMesa/registrar-multiples
+        // =========================================================
+        [HttpPost("registrar-multiples")] // Define la ruta del endpoint POST
+        [AllowAnonymous] // Permite acceso sin autenticación (clientes del bar)
+        public async Task<IActionResult> RegistrarMultiplesVideos([FromBody] VideoMesaMultipleDto request) // Recibe el body del cliente
         {
-            if (request == null)
-                return BadRequest("Body requerido.");
+            if (request == null) // Valida que el body exista
+                return BadRequest("Body requerido."); // Retorna error 400 si no hay body
 
-            if (request.IdMesa <= 0)
-                return BadRequest("IdMesa inválido.");
+            if (string.IsNullOrWhiteSpace(request.CodigoMesa)) // Valida que el código de mesa exista
+                return BadRequest("CodigoMesa requerido."); // Error si no se envía el código
 
-            if (!request.Links.Any())
-                return BadRequest("Debe enviar links.");
+            if (request.Links == null || !request.Links.Any()) // Verifica que haya links enviados
+                return BadRequest("Debe enviar links."); // Error si la lista está vacía
 
-            var resultados = new List<VideoMesaRespuestaDto>();
+            // =========================================================
+            // Resolver la mesa internamente usando CodigoMesa
+            // =========================================================
+            var mesa = await _mesaRepositorio.ObtenerPorCodigoQRAsync(request.CodigoMesa); // Busca la mesa por su código QR
 
-            foreach (var link in request.Links)
+            if (mesa == null) // Si no existe mesa con ese código
+                return NotFound("Mesa no encontrada."); // Retorna 404 para evitar filtrado de información
+
+            // =========================================================
+            // Crear los videos asociados exclusivamente a esa mesa
+            // =========================================================
+            var resultados = new List<VideoMesaRespuestaDto>(); // Lista para acumular resultados creados
+
+            foreach (var link in request.Links) // Itera cada link enviado por el cliente
             {
-                if (!EsUrlYoutubeValida(link))
-                    return BadRequest($"Link inválido: {link}");
+                if (!EsUrlYoutubeValida(link)) // Valida que el link sea de YouTube
+                    return BadRequest($"Link inválido: {link}"); // Error si alguno no es válido
 
-                var dto = new VideoMesaCrearDto
+                var dto = new VideoMesaCrearDto // Construye DTO de creación interno
                 {
-                    IdMesa = request.IdMesa,
-                    LinkVideo = link
+                    IdMesa = mesa.IdMesa, // Usa el IdMesa real obtenido del backend (no del cliente)
+                    LinkVideo = link // Asigna el link validado
                 };
 
-                var creado = await _servicio.CrearAsync(dto);
-                resultados.Add(creado);
+                var creado = await _servicio.CrearAsync(dto); // Crea el video usando la lógica del servicio
+                resultados.Add(creado); // Agrega el resultado a la lista final
             }
 
-            return Created("", resultados);
+            return Created("", resultados); // Retorna 201 con todos los videos creados
         }
 
         // =========================================================
