@@ -5,201 +5,133 @@ using MusicBares.DTOs.VideoMesa;
 
 namespace MusicBares.API.Controllers
 {
-    // ============================================================
-    // Controller encargado de exponer endpoints REST relacionados
-    // a solicitudes de videos realizadas desde mesas.
-    // ============================================================
     [ApiController]
     [Route("api/[controller]")]
     public class VideoMesaController : ControllerBase
     {
         private readonly IVideoMesaServicio _servicio;
 
-        // ============================================================
-        // Constructor con inyección de dependencias
-        // ============================================================
         public VideoMesaController(IVideoMesaServicio servicio)
         {
             _servicio = servicio;
         }
 
-        // ============================================================
-        // 1️⃣ Registrar múltiples videos para una mesa
+        // =========================================================
+        // 1️⃣ Cliente: Registrar múltiples videos desde su mesa
         // POST: api/VideoMesa/registrar-multiples
-        // Las mesas/usuarios no necesitan estar autenticados
-        // ============================================================
-        [AllowAnonymous]
+        // =========================================================
         [HttpPost("registrar-multiples")]
-        public async Task<IActionResult> RegistrarMultiplesVideos(
-            [FromBody] VideoMesaMultipleDto request)
+        [AllowAnonymous] // Público desde la mesa
+        public async Task<IActionResult> RegistrarMultiplesVideos([FromBody] VideoMesaMultipleDto request)
         {
-            try
+            if (request == null)
+                return BadRequest("Body requerido.");
+
+            if (request.IdMesa <= 0)
+                return BadRequest("IdMesa inválido.");
+
+            if (!request.Links.Any())
+                return BadRequest("Debe enviar links.");
+
+            var resultados = new List<VideoMesaRespuestaDto>();
+
+            foreach (var link in request.Links)
             {
-                if (request == null)
-                    return BadRequest("Body requerido.");
+                if (!EsUrlYoutubeValida(link))
+                    return BadRequest($"Link inválido: {link}");
 
-                if (request.IdMesa <= 0)
-                    return BadRequest("IdMesa inválido.");
-
-                if (!request.Links.Any())
-                    return BadRequest("Debe enviar links.");
-
-                var resultados = new List<VideoMesaRespuestaDto>();
-
-                foreach (var link in request.Links)
+                var dto = new VideoMesaCrearDto
                 {
-                    if (!EsUrlYoutubeValida(link))
-                        return BadRequest($"Link inválido: {link}");
+                    IdMesa = request.IdMesa,
+                    LinkVideo = link
+                };
 
-                    var dto = new VideoMesaCrearDto
-                    {
-                        IdMesa = request.IdMesa,
-                        LinkVideo = link
-                    };
-
-                    var creado = await _servicio.CrearAsync(dto);
-                    resultados.Add(creado);
-                }
-
-                return Created("", resultados);
+                var creado = await _servicio.CrearAsync(dto);
+                resultados.Add(creado);
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
+
+            return Created("", resultados);
         }
 
-        // ============================================================
-        // 2️⃣ Obtener videos de una mesa
-        // GET: api/VideoMesa/mesa/{idMesa}
-        // ============================================================
-        [HttpGet("mesa/{idMesa:int}")]
-        public async Task<IActionResult> ObtenerPorMesa(int idMesa)
-        {
-            try
-            {
-                if (idMesa <= 0)
-                    return BadRequest("IdMesa inválido.");
-
-                var videos = await _servicio.ObtenerPorMesaAsync(idMesa);
-
-                if (!videos.Any())
-                    return NotFound("No existen videos para esta mesa.");
-
-                return Ok(videos);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
-        }
-
-        // ============================================================
-        // 3️⃣ Obtener cola Round Robin del bar
+        // =========================================================
+        // 2️⃣ Dueño: Obtener cola completa round-robin del bar
         // GET: api/VideoMesa/cola/{idBar}
-        // ============================================================
+        // =========================================================
         [HttpGet("cola/{idBar:int}")]
+        [Authorize] // Solo dueño autenticado
         public async Task<IActionResult> ObtenerColaRoundRobin(int idBar)
         {
-            try
-            {
-                if (idBar <= 0)
-                    return BadRequest("IdBar inválido.");
+            if (idBar <= 0)
+                return BadRequest("IdBar inválido.");
 
-                var cola = await _servicio.ObtenerColaRoundRobinAsync(idBar);
+            var cola = await _servicio.ObtenerColaRoundRobinAsync(idBar);
 
-                if (!cola.Any())
-                    return NotFound("No hay videos pendientes.");
+            if (!cola.Any())
+                return NotFound("No hay videos pendientes.");
 
-                return Ok(cola);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
+            return Ok(cola);
         }
 
-        // ============================================================
-        // 4️⃣ Tomar siguiente video automáticamente (round-robin)
-        // GET: api/VideoMesa/tomar-siguiente/{idBar}
-        // ============================================================
-        [AllowAnonymous] // cualquier mesa/usuario puede solicitar
-        [HttpGet("tomar-siguiente/{idBar:int}")]
-        public async Task<IActionResult> TomarSiguienteVideo(int idBar)
+        // =========================================================
+        // 3️⃣ Dueño: Obtener siguiente video a reproducir
+        // GET: api/VideoMesa/siguiente/{idBar}
+        // =========================================================
+        [HttpGet("siguiente/{idBar:int}")]
+        [Authorize]
+        public async Task<IActionResult> ObtenerSiguiente(int idBar)
         {
-            try
-            {
-                if (idBar <= 0)
-                    return BadRequest("IdBar inválido.");
+            if (idBar <= 0)
+                return BadRequest("IdBar inválido.");
 
-                var video = await _servicio.TomarSiguienteVideoAsync(idBar);
+            var video = await _servicio.TomarSiguienteVideoAsync(idBar);
 
-                if (video == null)
-                    return NotFound("No hay videos pendientes.");
+            if (video == null)
+                return NotFound("No existen videos pendientes.");
 
-                return Ok(video);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error interno al obtener siguiente video: {ex.Message}");
-            }
+            return Ok(video);
         }
 
-        // ============================================================
-        // 5️⃣ Marcar video como reproduciendo
+        // =========================================================
+        // 4️⃣ Dueño: Marcar video como reproduciendo manualmente
         // PUT: api/VideoMesa/reproduciendo/{idVideo}
-        // ============================================================
-        [Authorize] // solo el dueño puede actualizar
+        // =========================================================
         [HttpPut("reproduciendo/{idVideo:int}")]
+        [Authorize]
         public async Task<IActionResult> MarcarComoReproduciendo(int idVideo)
         {
-            try
-            {
-                if (idVideo <= 0)
-                    return BadRequest("IdVideo inválido.");
+            if (idVideo <= 0)
+                return BadRequest("IdVideo inválido.");
 
-                bool resultado = await _servicio.MarcarComoReproduciendoAsync(idVideo);
+            bool resultado = await _servicio.MarcarComoReproduciendoAsync(idVideo);
 
-                if (!resultado)
-                    return NotFound("Video no encontrado.");
+            if (!resultado)
+                return NotFound("Video no encontrado.");
 
-                return Ok("Estado actualizado correctamente.");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
+            return Ok("Estado actualizado correctamente.");
         }
 
-        // ============================================================
-        // 6️⃣ Eliminar video
+        // =========================================================
+        // 5️⃣ Dueño: Eliminar video de la cola
         // DELETE: api/VideoMesa/{idVideo}
-        // ============================================================
-        [Authorize] // solo el dueño puede eliminar
+        // =========================================================
         [HttpDelete("{idVideo:int}")]
+        [Authorize]
         public async Task<IActionResult> Eliminar(int idVideo)
         {
-            try
-            {
-                if (idVideo <= 0)
-                    return BadRequest("IdVideo inválido.");
+            if (idVideo <= 0)
+                return BadRequest("IdVideo inválido.");
 
-                bool eliminado = await _servicio.EliminarAsync(idVideo);
+            bool eliminado = await _servicio.EliminarAsync(idVideo);
 
-                if (!eliminado)
-                    return NotFound("Video no encontrado.");
+            if (!eliminado)
+                return NotFound("Video no encontrado.");
 
-                return Ok("Video eliminado correctamente.");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
+            return Ok("Video eliminado correctamente.");
         }
 
-        // ============================================================
+        // =========================================================
         // Validación simple de URL YouTube
-        // ============================================================
+        // =========================================================
         private bool EsUrlYoutubeValida(string url)
         {
             if (string.IsNullOrWhiteSpace(url))
