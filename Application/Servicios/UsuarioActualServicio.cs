@@ -1,6 +1,6 @@
-﻿using MusicBares.Application.Interfaces.Servicios; // Permite implementar la interfaz del servicio
-using MusicBares.Application.Interfaces.Context;   // Permite usar IUsuarioContext para leer el JWT
+﻿using MusicBares.Application.Interfaces.Context;   // Permite usar IUsuarioContext para leer el JWT
 using MusicBares.Application.Interfaces.Repositories; // Permite usar repositorios
+using MusicBares.Application.Interfaces.Servicios; // Permite implementar la interfaz del servicio
 using MusicBares.Entidades; // Permite usar entidades Usuario y Bar
 
 namespace MusicBares.Application.Servicios
@@ -22,6 +22,7 @@ namespace MusicBares.Application.Servicios
 
         // Cache del bar durante el request
         private Bar? _barCache;
+
 
         // Constructor con inyección de dependencias
         public UsuarioActualServicio(
@@ -117,5 +118,8 @@ namespace MusicBares.Application.Servicios
 
             return bar.IdBar;
         }
+
+        
+
     }
 }

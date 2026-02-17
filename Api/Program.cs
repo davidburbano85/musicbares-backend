@@ -268,6 +268,30 @@ builder.Services
 // ===========================
 builder.Services.AddAuthorization();
 
+// ===========================
+// CONFIGURACIÓN CORS
+// Permite que el frontend Angular
+// pueda llamar a esta API desde otro dominio
+// ===========================
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FrontendPolicy", policy =>
+    {
+        policy
+            // 🔹 Permite peticiones desde tu frontend en Render
+            .WithOrigins(
+                "http://localhost:4200",              // desarrollo local
+                "https://music-bares.onrender.com"    // frontend en producción
+            )
+
+            // 🔹 Permite cualquier header (Authorization, Content-Type, etc.)
+            .AllowAnyHeader()
+
+            // 🔹 Permite GET, POST, PUT, DELETE, etc.
+            .AllowAnyMethod();
+    });
+});
+
 
 // Controllers
 builder.Services.AddControllers();

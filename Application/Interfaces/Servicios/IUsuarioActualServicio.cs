@@ -1,4 +1,5 @@
-﻿using MusicBares.Entidades; // Permite usar la entidad Usuario y Bar
+﻿using MusicBares.DTOs.Usuario;
+using MusicBares.Entidades; // Permite usar la entidad Usuario y Bar
 
 namespace MusicBares.Application.Interfaces.Servicios
 {
@@ -16,5 +17,6 @@ namespace MusicBares.Application.Interfaces.Servicios
 
         // Retorna la entidad completa del usuario autenticado
         Task<Usuario> ObtenerUsuarioAsync();
+
     }
 }
