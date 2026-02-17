@@ -328,6 +328,12 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 // Redirecciona HTTP → HTTPS
 //app.UseHttpsRedirection();
 
+// ===========================
+// ACTIVAR CORS
+// Debe ir antes de Authentication y Authorization
+// ===========================
+app.UseCors("FrontendPolicy");
+
 
 // Activa middleware de autenticación
 app.UseAuthentication();
