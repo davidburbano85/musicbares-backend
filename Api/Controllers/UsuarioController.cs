@@ -79,5 +79,20 @@ namespace MusicBares.API.Controllers
             var resultado = await _usuarioServicio.ReactivarAsync(idUsuario);
             return Ok(resultado);
         }
+
+        // GET api/usuario/correo/{correoElectronico}
+        [HttpGet("correo/{correoElectronico}")]
+        public async Task<IActionResult> ObtenerPorCorreo(string correoElectronico)
+        {
+            var usuario = await _usuarioServicio.ObtenerPorCorreoAsync(correoElectronico);
+
+            if (usuario == null)
+                return NotFound(new { mensaje = "Usuario no encontrado" });
+
+            return Ok(usuario);
+        }
+
+
+
     }
 }

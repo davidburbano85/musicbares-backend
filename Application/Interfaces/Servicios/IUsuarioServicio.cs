@@ -28,5 +28,7 @@ namespace MusicBares.Application.Interfaces.Servicios
 
         // Obtiene usuario usando auth_user_id
         Task<Usuario?> ObtenerPorAuthIdAsync(Guid authUserId);
+        Task<Usuario> ObtenerPorCorreoAsync(string correoElectronico);
+
     }
 }

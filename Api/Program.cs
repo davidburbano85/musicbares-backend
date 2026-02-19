@@ -281,6 +281,7 @@ builder.Services.AddCors(options =>
             // 🔹 Permite peticiones desde tu frontend en Render
             .WithOrigins(
                 "http://localhost:4200",              // desarrollo local
+                "http://127.0.0.1:4200",
                 "https://music-bares.onrender.com"    // frontend en producción
             )
 
