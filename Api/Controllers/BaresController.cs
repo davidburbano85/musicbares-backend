@@ -47,6 +47,19 @@ namespace MusicBares.API.Controllers
             return Ok(bar);
         }
 
+        // GET /api/bar/usuario/{idUsuario}
+        [HttpGet("usuario/{idUsuario}")]
+        public async Task<IActionResult> ObtenerPorUsuario(int idUsuario)
+        {
+            var bar = await _barServicio.ObtenerPorUsuarioAsync(idUsuario);
+
+            if (bar == null)
+                return NotFound(new { mensaje = "Bar no encontrado para este usuario" });
+
+            return Ok(bar);
+        }
+
+
         // ================================
         // Actualizar bar
         // ================================
