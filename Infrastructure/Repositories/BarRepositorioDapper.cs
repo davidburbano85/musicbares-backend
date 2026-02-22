@@ -85,6 +85,7 @@ namespace MusicBares.Infrastructure.Repositories
                     fecha_registro AS FechaRegistro
                 FROM bar
                 WHERE id_usuario = @idUsuario;
+                and AND estado = true;
             ";
 
             return await conexion.QueryAsync<Bar>(sql, new { idUsuario });
