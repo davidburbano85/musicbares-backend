@@ -9,10 +9,12 @@ namespace MusicBares.API.Controllers
     public class UsuarioController : ControllerBase
     {
         private readonly IUsuarioServicio _usuarioServicio;
+        private readonly IBarServicio _barServicio;
 
-        public UsuarioController(IUsuarioServicio usuarioServicio)
+        public UsuarioController(IUsuarioServicio usuarioServicio, IBarServicio barServicio)
         {
             _usuarioServicio = usuarioServicio;
+            _barServicio = barServicio;
         }
 
         // 🔹 Listar usuarios activos (uso administrativo / pruebas)
@@ -97,19 +99,21 @@ namespace MusicBares.API.Controllers
         {
             try
             {
-                // 1️⃣ Validamos existencia del usuario
+                // 1️⃣ Validar que el usuario exista
                 var usuario = await _usuarioServicio.ObtenerPorIdAsync(idUsuario);
                 if (usuario == null)
                     return NotFound(new { mensaje = "Usuario no encontrado" });
 
-                // 2️⃣ Obtenemos el bar usando BarServicio desde el repositorio (llamando al servicio de bares)
-                // Aquí asumimos que BarServicio tiene un método ReactivarAsync y ObtenerPorUsuarioAsync que devuelven el bar
-                // Como no podemos acceder directamente a bares con Estado=false, devolvemos solo IdBar conocido
-                // Suponiendo que en tu base de datos cada usuario tiene máximo un bar:
+                // 2️⃣ Obtener el bar real desde BarServicio
+                var bar = await _barServicio.ObtenerPrimerBarInclusoInactivoAsync(idUsuario);
+
+                if (bar == null)
+                    return NotFound(new { mensaje = "El usuario no tiene un bar asociado" });
+
+                // 3️⃣ Devolver el IdBar real
                 return Ok(new
                 {
-                    IdBar = usuario.IdUsuario, // temporalmente usamos IdUsuario como referencia del bar
-                    Mensaje = "Aquí se devolvería el IdBar del usuario (ajustar según la BD)"
+                    IdBar = bar.IdBar
                 });
             }
             catch (Exception ex)
