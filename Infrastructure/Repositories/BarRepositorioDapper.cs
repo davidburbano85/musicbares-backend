@@ -90,6 +90,25 @@ namespace MusicBares.Infrastructure.Repositories
             return await conexion.QueryAsync<Bar>(sql, new { idUsuario });
         }
 
+        public async Task<IEnumerable<Bar>> ObtenerPorUsuarioIncluyendoInactivosAsync(int idUsuario)
+        {
+            using var conexion = _fabricaConexion.CrearConexion();
+
+            string sql = @"
+        SELECT 
+            id_bar AS IdBar,
+            nombre_bar AS NombreBar,
+            direccion AS Direccion,
+            id_usuario AS IdUsuario,
+            estado AS Estado,
+            fecha_registro AS FechaRegistro
+            FROM bar
+            WHERE id_usuario = @idUsuario;
+              ";
+
+            return await conexion.QueryAsync<Bar>(sql, new { idUsuario });
+        }
+
         // Verifica si un bar pertenece a un usuario
         public async Task<bool> ExisteBarUsuarioAsync(int idBar, int idUsuario)
         {

@@ -32,4 +32,5 @@ public interface IBarRepositorio
 
     // Obtiene el bar perteneciente a un usuario
     Task<Bar?> ObtenerBarPorUsuarioIdAsync(int idUsuario);
+    Task<IEnumerable<Bar>> ObtenerPorUsuarioIncluyendoInactivosAsync(int idUsuario);
 }

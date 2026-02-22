@@ -360,8 +360,8 @@ namespace MusicBares.Application.Servicios
 
         // Obtiene todos los bares de un usuario, incluso inactivos
         public async Task<BarListadoDto?> ObtenerPrimerBarInclusoInactivoAsync(int idUsuario)
-        {
-            var bares = await _barRepositorio.ObtenerPorUsuarioAsync(idUsuario); // Aquí necesitas modificar el repo para incluir inactivos
+        {// Aquí necesitas modificar el repo para incluir inactivos
+            var bares = await _barRepositorio.ObtenerPorUsuarioIncluyendoInactivosAsync(idUsuario); 
 
             // Si no hay bares, retornamos null
             var bar = bares.FirstOrDefault();
