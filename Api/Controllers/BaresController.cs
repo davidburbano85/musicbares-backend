@@ -17,8 +17,8 @@ namespace MusicBares.API.Controllers
             _barServicio = barServicio;
         }
 
-    
-     
+
+
         // ================================
         // Crear bar
         // ================================
@@ -125,22 +125,34 @@ namespace MusicBares.API.Controllers
         {
             try
             {
-                // 1️⃣ Obtener los bares del usuario
+                // 1️⃣ Obtener los bares del usuario, incluyendo los inactivos
                 var baresUsuario = await _barServicio.ObtenerPorUsuarioAsync(idUsuario);
 
-                // 2️⃣ Validar existencia del bar
+                // 2️⃣ Validar existencia del bar aunque esté inactivo
                 var bar = baresUsuario.FirstOrDefault();
                 if (bar == null)
                     return NotFound(new { mensaje = "No se encontró bar para este usuario" });
 
-                // 3️⃣ Validar estado
+                // 3️⃣ Validar si ya está activo
                 if (bar.Estado)
                     return BadRequest(new { mensaje = "El bar ya está activo" });
 
-                // 4️⃣ Reactivar bar usando el método existente por idBar
-                var resultado = await _barServicio.ReactivarAsync(bar.IdBar);
+                // 4️⃣ Crear DTO para actualización
+                var barActualizarDto = new BarActualizarDto
+                {
+                    IdBar = bar.IdBar,
+                    Estado = true
+                };
 
-                return Ok(resultado);
+                // 5️⃣ Guardar cambios en la base de datos
+                var actualizado = await _barServicio.ActualizarAsync(barActualizarDto);
+
+                // 6️⃣ Retornar respuesta
+                return Ok(new
+                {
+                    mensaje = "Bar reactivado correctamente",
+                    bar = actualizado
+                });
             }
             catch (ArgumentException ex)
             {
