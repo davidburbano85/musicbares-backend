@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using MusicBares.Application.Interfaces.Repositories;
 using MusicBares.Application.Interfaces.Servicios;
 using MusicBares.DTOs.Bar;
-using Microsoft.AspNetCore.Authorization;
 
 namespace MusicBares.API.Controllers
 {
@@ -125,34 +126,15 @@ namespace MusicBares.API.Controllers
         {
             try
             {
-                // 1️⃣ Obtener los bares del usuario, incluyendo los inactivos
-                var baresUsuario = await _barServicio.ObtenerPorUsuarioAsync(idUsuario);
-
-                // 2️⃣ Validar existencia del bar aunque esté inactivo
-                var bar = baresUsuario.FirstOrDefault();
+                // 1️⃣ Obtener el primer bar del usuario, incluso si está inactivo
+                var bar = await _barServicio.ObtenerPrimerBarInclusoInactivoAsync(idUsuario);
                 if (bar == null)
                     return NotFound(new { mensaje = "No se encontró bar para este usuario" });
 
-                // 3️⃣ Validar si ya está activo
-                if (bar.Estado)
-                    return BadRequest(new { mensaje = "El bar ya está activo" });
+                // 2️⃣ Reactivar usando el servicio existente
+                var resultado = await _barServicio.ReactivarAsync(bar.IdBar);
 
-                // 4️⃣ Crear DTO para actualización
-                var barActualizarDto = new BarActualizarDto
-                {
-                    IdBar = bar.IdBar,
-                    Estado = true
-                };
-
-                // 5️⃣ Guardar cambios en la base de datos
-                var actualizado = await _barServicio.ActualizarAsync(barActualizarDto);
-
-                // 6️⃣ Retornar respuesta
-                return Ok(new
-                {
-                    mensaje = "Bar reactivado correctamente",
-                    bar = actualizado
-                });
+                return Ok(resultado);
             }
             catch (ArgumentException ex)
             {
@@ -163,6 +145,8 @@ namespace MusicBares.API.Controllers
                 return StatusCode(500, new { mensaje = ex.Message });
             }
         }
+
+
 
     }
 }

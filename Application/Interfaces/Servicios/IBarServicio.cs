@@ -43,6 +43,7 @@ namespace MusicBares.Application.Interfaces.Servicios
 
         Task<BarRespuestaDto> ReactivarAsync(int idBar);
 
+        Task<BarListadoDto?> ObtenerPrimerBarInclusoInactivoAsync(int idUsuario);
 
     }
 }
