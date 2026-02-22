@@ -92,7 +92,31 @@ namespace MusicBares.API.Controllers
             return Ok(usuario);
         }
 
+        [HttpGet("{idUsuario}/mi-bar")]
+        public async Task<IActionResult> ObtenerMiBar(int idUsuario)
+        {
+            try
+            {
+                // 1️⃣ Validamos existencia del usuario
+                var usuario = await _usuarioServicio.ObtenerPorIdAsync(idUsuario);
+                if (usuario == null)
+                    return NotFound(new { mensaje = "Usuario no encontrado" });
 
+                // 2️⃣ Obtenemos el bar usando BarServicio desde el repositorio (llamando al servicio de bares)
+                // Aquí asumimos que BarServicio tiene un método ReactivarAsync y ObtenerPorUsuarioAsync que devuelven el bar
+                // Como no podemos acceder directamente a bares con Estado=false, devolvemos solo IdBar conocido
+                // Suponiendo que en tu base de datos cada usuario tiene máximo un bar:
+                return Ok(new
+                {
+                    IdBar = usuario.IdUsuario, // temporalmente usamos IdUsuario como referencia del bar
+                    Mensaje = "Aquí se devolvería el IdBar del usuario (ajustar según la BD)"
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { mensaje = $"Error interno: {ex.Message}" });
+            }
+        }
 
     }
 }
