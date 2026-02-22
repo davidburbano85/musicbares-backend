@@ -120,32 +120,7 @@ namespace MusicBares.API.Controllers
             }
         }
 
-        // Controller: BarController.cs
-        [HttpPatch("reactivar-usuario/{idUsuario}")]
-        public async Task<IActionResult> ReactivarPorUsuario(int idUsuario)
-        {
-            try
-            {
-                // 1️⃣ Obtener el primer bar del usuario, incluso si está inactivo
-                var bar = await _barServicio.ObtenerPrimerBarInclusoInactivoAsync(idUsuario);
-                if (bar == null)
-                    return NotFound(new { mensaje = "No se encontró bar para este usuario" });
-
-                // 2️⃣ Reactivar usando el servicio existente
-                var resultado = await _barServicio.ReactivarAsync(bar.IdBar);
-
-                return Ok(resultado);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { mensaje = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { mensaje = ex.Message });
-            }
-        }
-
+       
 
 
     }
