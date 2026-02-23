@@ -84,7 +84,7 @@ namespace MusicBares.Infrastructure.Repositories
                     estado AS Estado,
                     fecha_registro AS FechaRegistro
                 FROM bar
-                WHERE id_usuario = @idUsuario;
+                WHERE id_usuario = @idUsuario
                 and AND estado = true;
             ";
 
