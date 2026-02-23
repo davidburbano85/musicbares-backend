@@ -97,9 +97,11 @@ namespace MusicBares.Application.Servicios
         // =============================================
         public async Task<IEnumerable<VideoMesaListadoDto>> ObtenerColaRoundRobinAsync(int idBar)
         {
-            await ValidarPropietarioBarAsync(idBar);
-
             var videos = await _repositorio.ObtenerColaRoundRobinAsync(idBar);
+
+            // Lista vacía si no hay videos
+            videos = videos ?? Enumerable.Empty<VideoMesa>();
+
             return videos.Select(v => new VideoMesaListadoDto
             {
                 IdVideo = v.IdVideo,
@@ -110,7 +112,6 @@ namespace MusicBares.Application.Servicios
                 EstadoReproduccion = v.EstadoReproduccion
             });
         }
-
         // =============================================
         // Marcar video como reproduciendo (con validación)
         // =============================================
