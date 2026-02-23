@@ -29,17 +29,28 @@ namespace MusicBares.Application.Servicios
         {
             try
             {
+                // 🔹 Obtener el usuario actual desde el JWT
                 int idUsuario = await _usuarioActualServicio.ObtenerIdUsuarioAsync();
+                Console.WriteLine($"[CrearAsync] idUsuario obtenido: {idUsuario}");
+
+                // 🔹 Obtener el bar del usuario
                 var bar = (await _barRepositorio.ObtenerPorUsuarioAsync(idUsuario)).FirstOrDefault();
-
                 if (bar == null)
+                {
+                    Console.WriteLine("[CrearAsync] NO se encontró un bar para este usuario");
                     return new MesaRespuestaDto { Estado = false };
+                }
+                Console.WriteLine($"[CrearAsync] Bar encontrado: IdBar = {bar.IdBar}");
 
-                // Validar número repetido
+                // 🔹 Validar número de mesa repetido
                 bool numeroExiste = await _mesaRepositorio.ExisteNumeroMesaAsync(bar.IdBar, dto.NumeroMesa);
                 if (numeroExiste)
+                {
+                    Console.WriteLine($"[CrearAsync] Número de mesa repetido: {dto.NumeroMesa}");
                     return new MesaRespuestaDto { Estado = false, IdBar = bar.IdBar };
+                }
 
+                // 🔹 Crear la mesa
                 var mesa = new Mesa
                 {
                     NumeroMesa = dto.NumeroMesa,
@@ -47,9 +58,10 @@ namespace MusicBares.Application.Servicios
                     CodigoQR = dto.CodigoQR,
                     Estado = true
                 };
-
                 int idMesa = await _mesaRepositorio.CrearAsync(mesa);
+                Console.WriteLine($"[CrearAsync] Mesa creada con IdMesa = {idMesa}");
 
+                // 🔹 Retornar resultado exitoso
                 return new MesaRespuestaDto
                 {
                     IdMesa = idMesa,
@@ -59,12 +71,15 @@ namespace MusicBares.Application.Servicios
                     Estado = mesa.Estado
                 };
             }
-            catch
+            catch (Exception ex)
             {
+                // 🔹 Mostrar error completo para debug
+                Console.WriteLine($"[CrearAsync] ERROR: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
+
                 return new MesaRespuestaDto { Estado = false };
             }
         }
-
         // ==============================
         // OBTENER MESA POR ID
         // ==============================
