@@ -29,28 +29,38 @@ namespace MusicBares.Application.Servicios
         {
             try
             {
-                // 🔹 Obtener el usuario actual desde el JWT
-                int idUsuario = await _usuarioActualServicio.ObtenerIdUsuarioAsync();
-                Console.WriteLine($"[CrearAsync] idUsuario obtenido: {idUsuario}");
+                Console.WriteLine("===== INICIO CrearAsync =====");
 
-                // 🔹 Obtener el bar del usuario
-                var bar = (await _barRepositorio.ObtenerPorUsuarioAsync(idUsuario)).FirstOrDefault();
+                // 🔹 1️⃣ Obtener usuario actual desde JWT
+                int idUsuario = await _usuarioActualServicio.ObtenerIdUsuarioAsync();
+                Console.WriteLine($"[Paso 1] idUsuario obtenido: {idUsuario}");
+
+                // 🔹 2️⃣ Obtener bar activo del usuario
+                Console.WriteLine("[Paso 2] Obteniendo bar activo del usuario...");
+                var bar = await _barRepositorio.ObtenerBarPorUsuarioIdAsync(idUsuario);
+
                 if (bar == null)
                 {
-                    Console.WriteLine("[CrearAsync] NO se encontró un bar para este usuario");
+                    Console.WriteLine("[ERROR] No se encontró un bar activo para este usuario");
+                    Console.WriteLine("===== FIN CrearAsync =====");
                     return new MesaRespuestaDto { Estado = false };
                 }
-                Console.WriteLine($"[CrearAsync] Bar encontrado: IdBar = {bar.IdBar}");
+                Console.WriteLine($"[Paso 2] Bar encontrado: IdBar={bar.IdBar}, NombreBar={bar.NombreBar}, Estado={bar.Estado}");
 
-                // 🔹 Validar número de mesa repetido
+                // 🔹 3️⃣ Validar que el número de mesa no esté repetido
+                Console.WriteLine($"[Paso 3] Validando si número de mesa {dto.NumeroMesa} ya existe en el bar...");
                 bool numeroExiste = await _mesaRepositorio.ExisteNumeroMesaAsync(bar.IdBar, dto.NumeroMesa);
+
                 if (numeroExiste)
                 {
-                    Console.WriteLine($"[CrearAsync] Número de mesa repetido: {dto.NumeroMesa}");
+                    Console.WriteLine($"[ERROR] Número de mesa repetido: {dto.NumeroMesa}");
+                    Console.WriteLine("===== FIN CrearAsync =====");
                     return new MesaRespuestaDto { Estado = false, IdBar = bar.IdBar };
                 }
+                Console.WriteLine("[Paso 3] Número de mesa libre");
 
-                // 🔹 Crear la mesa
+                // 🔹 4️⃣ Crear objeto Mesa
+                Console.WriteLine("[Paso 4] Preparando objeto Mesa...");
                 var mesa = new Mesa
                 {
                     NumeroMesa = dto.NumeroMesa,
@@ -58,10 +68,17 @@ namespace MusicBares.Application.Servicios
                     CodigoQR = dto.CodigoQR,
                     Estado = true
                 };
-                int idMesa = await _mesaRepositorio.CrearAsync(mesa);
-                Console.WriteLine($"[CrearAsync] Mesa creada con IdMesa = {idMesa}");
+                Console.WriteLine($"[Paso 4] Mesa preparada: NumeroMesa={mesa.NumeroMesa}, CodigoQR={mesa.CodigoQR}, Estado={mesa.Estado}");
 
-                // 🔹 Retornar resultado exitoso
+                // 🔹 5️⃣ Insertar mesa en DB
+                Console.WriteLine("[Paso 5] Insertando mesa en la base de datos...");
+                int idMesa = await _mesaRepositorio.CrearAsync(mesa);
+                Console.WriteLine($"[Paso 5] Mesa creada con IdMesa={idMesa}");
+
+                // 🔹 6️⃣ Retornar DTO final
+                Console.WriteLine("[Paso 6] Retornando respuesta exitosa");
+                Console.WriteLine("===== FIN CrearAsync =====\n");
+
                 return new MesaRespuestaDto
                 {
                     IdMesa = idMesa,
@@ -73,13 +90,24 @@ namespace MusicBares.Application.Servicios
             }
             catch (Exception ex)
             {
-                // 🔹 Mostrar error completo para debug
-                Console.WriteLine($"[CrearAsync] ERROR: {ex.Message}");
+                // 🔹 Captura de error completa
+                Console.WriteLine("[EXCEPCIÓN] Ocurrió un error en CrearAsync");
+                Console.WriteLine($"Mensaje: {ex.Message}");
+                Console.WriteLine("StackTrace:");
                 Console.WriteLine(ex.StackTrace);
 
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine("InnerException:");
+                    Console.WriteLine(ex.InnerException.Message);
+                    Console.WriteLine(ex.InnerException.StackTrace);
+                }
+
+                Console.WriteLine("===== FIN CrearAsync =====\n");
                 return new MesaRespuestaDto { Estado = false };
             }
         }
+
         // ==============================
         // OBTENER MESA POR ID
         // ==============================
