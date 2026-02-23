@@ -112,6 +112,7 @@ namespace MusicBares.Infrastructure.Repositories
         // ======================================================
         public async Task<bool> ExisteMesaBarAsync(int idMesa, int idBar)
         {
+            if (idBar <= 0) return false;
             using var conexion = _fabricaConexion.CrearConexion();
 
             string sql = @"

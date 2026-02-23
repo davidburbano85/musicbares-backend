@@ -77,8 +77,18 @@ namespace MusicBares.Application.Servicios
             // Validar que la mesa pertenezca al bar del usuario
             int idUsuario = await _usuarioActualServicio.ObtenerIdUsuarioAsync();
             var bar = (await _barRepositorio.ObtenerPorUsuarioAsync(idUsuario)).FirstOrDefault();
-            if (bar == null || !(await _mesaRepositorio.ExisteMesaBarAsync(idMesa, bar.IdBar)))
+            if (bar == null)
+            {
+                // En lugar de continuar y lanzar SQL inválida, retornamos null
                 return null;
+            }
+
+            // Validar que la mesa pertenezca al bar del usuario
+            bool existeMesaEnBar = await _mesaRepositorio.ExisteMesaBarAsync(idMesa, bar.IdBar);
+            if (!existeMesaEnBar)
+            {
+                return null;
+            }
 
             return new MesaRespuestaDto
             {
