@@ -5,7 +5,7 @@ using MusicBares.Entidades;
 
 namespace MusicBares.Application.Servicios
 {
-    // Servicio de lógica de negocio para Mesas (versión segura)
+    // Servicio de lógica de negocio para Mesas (versión segura + debug)
     public class MesaServicio : IMesaServicio
     {
         private readonly IMesaRepositorio _mesaRepositorio;
@@ -90,19 +90,16 @@ namespace MusicBares.Application.Servicios
             }
             catch (Exception ex)
             {
-                // 🔹 Captura de error completa
                 Console.WriteLine("[EXCEPCIÓN] Ocurrió un error en CrearAsync");
                 Console.WriteLine($"Mensaje: {ex.Message}");
                 Console.WriteLine("StackTrace:");
                 Console.WriteLine(ex.StackTrace);
-
                 if (ex.InnerException != null)
                 {
                     Console.WriteLine("InnerException:");
                     Console.WriteLine(ex.InnerException.Message);
                     Console.WriteLine(ex.InnerException.StackTrace);
                 }
-
                 Console.WriteLine("===== FIN CrearAsync =====\n");
                 return new MesaRespuestaDto { Estado = false };
             }
@@ -157,7 +154,6 @@ namespace MusicBares.Application.Servicios
                     CodigoQR = mesa.CodigoQR,
                     Estado = mesa.Estado
                 };
-
                 Console.WriteLine($"[ObtenerPorIdAsync] ✅ DTO listo: IdMesa = {dto.IdMesa}, NumeroMesa = {dto.NumeroMesa}, Estado = {dto.Estado}\n");
 
                 return dto;
@@ -169,27 +165,48 @@ namespace MusicBares.Application.Servicios
                 return null;
             }
         }
+
         // ==============================
         // OBTENER MESAS POR BAR
         // ==============================
         public async Task<IEnumerable<MesaListadoDto>> ObtenerPorBarAsync(int unusedIdBar)
         {
-            // Ignoramos el parámetro externo
-            int idUsuario = await _usuarioActualServicio.ObtenerIdUsuarioAsync();
-            var bar = (await _barRepositorio.ObtenerPorUsuarioAsync(idUsuario)).FirstOrDefault();
-            if (bar == null)
-                return Enumerable.Empty<MesaListadoDto>();
-
-            var mesas = await _mesaRepositorio.ObtenerPorBarAsync(bar.IdBar);
-
-            return mesas.Select(m => new MesaListadoDto
+            try
             {
-                IdMesa = m.IdMesa,
-                NumeroMesa = m.NumeroMesa,
-                IdBar = m.IdBar,
-                CodigoQR = m.CodigoQR,
-                Estado = m.Estado
-            });
+                Console.WriteLine("\n[ObtenerPorBarAsync] Inicio");
+
+                int idUsuario = await _usuarioActualServicio.ObtenerIdUsuarioAsync();
+                Console.WriteLine($"[ObtenerPorBarAsync] idUsuario actual = {idUsuario}");
+
+                var bar = (await _barRepositorio.ObtenerPorUsuarioAsync(idUsuario)).FirstOrDefault();
+                if (bar == null)
+                {
+                    Console.WriteLine("[ObtenerPorBarAsync] ❌ No se encontró bar activo");
+                    return Enumerable.Empty<MesaListadoDto>();
+                }
+                Console.WriteLine($"[ObtenerPorBarAsync] Bar encontrado: IdBar={bar.IdBar}, NombreBar={bar.NombreBar}");
+
+                var mesas = await _mesaRepositorio.ObtenerPorBarAsync(bar.IdBar);
+                Console.WriteLine($"[ObtenerPorBarAsync] Mesas encontradas: {mesas.Count()}");
+
+                var list = mesas.Select(m => new MesaListadoDto
+                {
+                    IdMesa = m.IdMesa,
+                    NumeroMesa = m.NumeroMesa,
+                    IdBar = m.IdBar,
+                    CodigoQR = m.CodigoQR,
+                    Estado = m.Estado
+                });
+
+                Console.WriteLine("[ObtenerPorBarAsync] ✅ DTO listo para retorno\n");
+                return list;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ObtenerPorBarAsync] ERROR: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
+                return Enumerable.Empty<MesaListadoDto>();
+            }
         }
 
         // ==============================
@@ -197,18 +214,36 @@ namespace MusicBares.Application.Servicios
         // ==============================
         public async Task<MesaRespuestaDto?> ObtenerPorCodigoQRAsync(string codigoQR)
         {
-            var mesa = await _mesaRepositorio.ObtenerPorCodigoQRAsync(codigoQR);
-            if (mesa == null)
-                return null;
-
-            return new MesaRespuestaDto
+            try
             {
-                IdMesa = mesa.IdMesa,
-                NumeroMesa = mesa.NumeroMesa,
-                IdBar = mesa.IdBar,
-                CodigoQR = mesa.CodigoQR,
-                Estado = mesa.Estado
-            };
+                Console.WriteLine($"\n[ObtenerPorCodigoQRAsync] Inicio: codigoQR = {codigoQR}");
+
+                var mesa = await _mesaRepositorio.ObtenerPorCodigoQRAsync(codigoQR);
+                if (mesa == null)
+                {
+                    Console.WriteLine("[ObtenerPorCodigoQRAsync] ❌ No se encontró mesa con ese código");
+                    return null;
+                }
+                Console.WriteLine($"[ObtenerPorCodigoQRAsync] Mesa encontrada: IdMesa={mesa.IdMesa}, NumeroMesa={mesa.NumeroMesa}, Estado={mesa.Estado}");
+
+                var dto = new MesaRespuestaDto
+                {
+                    IdMesa = mesa.IdMesa,
+                    NumeroMesa = mesa.NumeroMesa,
+                    IdBar = mesa.IdBar,
+                    CodigoQR = mesa.CodigoQR,
+                    Estado = mesa.Estado
+                };
+                Console.WriteLine("[ObtenerPorCodigoQRAsync] ✅ DTO listo\n");
+
+                return dto;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ObtenerPorCodigoQRAsync] ERROR: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
+                return null;
+            }
         }
 
         // ==============================
@@ -218,15 +253,22 @@ namespace MusicBares.Application.Servicios
         {
             try
             {
+                Console.WriteLine($"\n[ActualizarAsync] Inicio: IdMesa = {dto.IdMesa}");
+
                 var mesa = await _mesaRepositorio.ObtenerPorIdAsync(dto.IdMesa);
                 if (mesa == null)
+                {
+                    Console.WriteLine("[ActualizarAsync] ❌ No se encontró la mesa");
                     return new MesaRespuestaDto { Estado = false };
+                }
 
-                // Validar que la mesa pertenezca al bar del usuario
                 int idUsuario = await _usuarioActualServicio.ObtenerIdUsuarioAsync();
                 var bar = (await _barRepositorio.ObtenerPorUsuarioAsync(idUsuario)).FirstOrDefault();
                 if (bar == null || !(await _mesaRepositorio.ExisteMesaBarAsync(dto.IdMesa, bar.IdBar)))
+                {
+                    Console.WriteLine("[ActualizarAsync] ❌ La mesa no pertenece al bar del usuario");
                     return new MesaRespuestaDto { Estado = false };
+                }
 
                 // Actualizar datos
                 mesa.NumeroMesa = dto.NumeroMesa;
@@ -235,9 +277,12 @@ namespace MusicBares.Application.Servicios
 
                 bool actualizado = await _mesaRepositorio.ActualizarAsync(mesa);
                 if (!actualizado)
+                {
+                    Console.WriteLine("[ActualizarAsync] ❌ Error al actualizar la mesa");
                     return new MesaRespuestaDto { Estado = false };
+                }
 
-                return new MesaRespuestaDto
+                var dtoResultado = new MesaRespuestaDto
                 {
                     IdMesa = mesa.IdMesa,
                     NumeroMesa = mesa.NumeroMesa,
@@ -245,9 +290,13 @@ namespace MusicBares.Application.Servicios
                     CodigoQR = mesa.CodigoQR,
                     Estado = mesa.Estado
                 };
+                Console.WriteLine("[ActualizarAsync] ✅ Actualización exitosa");
+                return dtoResultado;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"[ActualizarAsync] ERROR: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
                 return new MesaRespuestaDto { Estado = false };
             }
         }
