@@ -13,11 +13,16 @@ namespace MusicBares.Application.Servicios
         private readonly IBarRepositorio _barRepositorio;
         // Servicio que permite obtener usuario autenticado desde JWT
         private readonly IUsuarioActualServicio _usuarioActualServicio;
+
+
+        private readonly IUsuarioRepositorio _usuarioRepositorio;
         public BarServicio(IBarRepositorio barRepositorio,
-            IUsuarioActualServicio usuarioActualServicio )
+            IUsuarioActualServicio usuarioActualServicio,
+            IUsuarioRepositorio usuarioRepositorio)
         {
             _barRepositorio = barRepositorio;
             _usuarioActualServicio = usuarioActualServicio;
+            _usuarioRepositorio = usuarioRepositorio;
         }
 
         /// Crea un nuevo bar en el sistema.
@@ -375,7 +380,44 @@ namespace MusicBares.Application.Servicios
                 Estado = bar.Estado
             };
         }
+        public async Task<BarListadoDto?> ObtenerPorCorreoAsync(string correoElectronico)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(correoElectronico))
+                    return null;
 
+                // Buscar usuario por correo
+                var usuario = await _usuarioRepositorio.ObtenerPorCorreoAsync(correoElectronico.Trim());
+
+                if (usuario == null)
+                    return null;
+
+                // Validar que el usuario autenticado coincida
+                var idUsuarioActual = await _usuarioActualServicio.ObtenerIdUsuarioAsync();
+
+                if (usuario.IdUsuario != idUsuarioActual)
+                    return null;
+
+                // Obtener el bar (siempre será uno solo)
+                var bar = await _barRepositorio.ObtenerBarPorUsuarioIdAsync(usuario.IdUsuario);
+
+                if (bar == null)
+                    return null;
+
+                return new BarListadoDto
+                {
+                    IdBar = bar.IdBar,
+                    NombreBar = bar.NombreBar,
+                    Direccion = bar.Direccion,
+                    Estado = bar.Estado
+                };
+            }
+            catch
+            {
+                return null;
+            }
+        }
     }
 }
 
