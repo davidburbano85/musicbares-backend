@@ -113,36 +113,62 @@ namespace MusicBares.Application.Servicios
         // ==============================
         public async Task<MesaRespuestaDto?> ObtenerPorIdAsync(int idMesa)
         {
-            var mesa = await _mesaRepositorio.ObtenerPorIdAsync(idMesa);
-            if (mesa == null)
-                return null;
-
-            // Validar que la mesa pertenezca al bar del usuario
-            int idUsuario = await _usuarioActualServicio.ObtenerIdUsuarioAsync();
-            var bar = (await _barRepositorio.ObtenerPorUsuarioAsync(idUsuario)).FirstOrDefault();
-            if (bar == null)
+            try
             {
-                // En lugar de continuar y lanzar SQL inválida, retornamos null
+                Console.WriteLine($"\n[ObtenerPorIdAsync] Inicio: idMesa = {idMesa}");
+
+                // 🔹 Obtener la mesa directamente
+                var mesa = await _mesaRepositorio.ObtenerPorIdAsync(idMesa);
+                if (mesa == null)
+                {
+                    Console.WriteLine("[ObtenerPorIdAsync] ❌ No se encontró la mesa en la base de datos");
+                    return null;
+                }
+                Console.WriteLine($"[ObtenerPorIdAsync] Mesa encontrada: IdMesa = {mesa.IdMesa}, NumeroMesa = {mesa.NumeroMesa}, IdBar = {mesa.IdBar}, Estado = {mesa.Estado}");
+
+                // 🔹 Obtener el usuario actual desde el JWT
+                int idUsuario = await _usuarioActualServicio.ObtenerIdUsuarioAsync();
+                Console.WriteLine($"[ObtenerPorIdAsync] idUsuario actual = {idUsuario}");
+
+                // 🔹 Obtener el bar activo del usuario
+                var bar = (await _barRepositorio.ObtenerPorUsuarioAsync(idUsuario)).FirstOrDefault();
+                if (bar == null)
+                {
+                    Console.WriteLine("[ObtenerPorIdAsync] ❌ No se encontró un bar activo para este usuario");
+                    return null;
+                }
+                Console.WriteLine($"[ObtenerPorIdAsync] Bar encontrado: IdBar = {bar.IdBar}, NombreBar = {bar.NombreBar}");
+
+                // 🔹 Validar que la mesa pertenezca a este bar
+                bool existeMesaEnBar = await _mesaRepositorio.ExisteMesaBarAsync(idMesa, bar.IdBar);
+                if (!existeMesaEnBar)
+                {
+                    Console.WriteLine("[ObtenerPorIdAsync] ❌ La mesa NO pertenece al bar del usuario");
+                    return null;
+                }
+                Console.WriteLine("[ObtenerPorIdAsync] ✅ La mesa pertenece al bar del usuario");
+
+                // 🔹 Retornar la mesa como DTO
+                var dto = new MesaRespuestaDto
+                {
+                    IdMesa = mesa.IdMesa,
+                    NumeroMesa = mesa.NumeroMesa,
+                    IdBar = mesa.IdBar,
+                    CodigoQR = mesa.CodigoQR,
+                    Estado = mesa.Estado
+                };
+
+                Console.WriteLine($"[ObtenerPorIdAsync] ✅ DTO listo: IdMesa = {dto.IdMesa}, NumeroMesa = {dto.NumeroMesa}, Estado = {dto.Estado}\n");
+
+                return dto;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ObtenerPorIdAsync] ERROR: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
                 return null;
             }
-
-            // Validar que la mesa pertenezca al bar del usuario
-            bool existeMesaEnBar = await _mesaRepositorio.ExisteMesaBarAsync(idMesa, bar.IdBar);
-            if (!existeMesaEnBar)
-            {
-                return null;
-            }
-
-            return new MesaRespuestaDto
-            {
-                IdMesa = mesa.IdMesa,
-                NumeroMesa = mesa.NumeroMesa,
-                IdBar = mesa.IdBar,
-                CodigoQR = mesa.CodigoQR,
-                Estado = mesa.Estado
-            };
         }
-
         // ==============================
         // OBTENER MESAS POR BAR
         // ==============================
