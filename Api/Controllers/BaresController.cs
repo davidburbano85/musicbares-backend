@@ -120,7 +120,26 @@ namespace MusicBares.API.Controllers
             }
         }
 
-       
+        // GET /api/bar/correo/{correoElectronico}
+        [HttpGet("correo/{correoElectronico}")]
+        public async Task<IActionResult> ObtenerPorCorreo(string correoElectronico)
+        {
+            // Llamamos al servicio
+            var bar = await _barServicio.ObtenerPorCorreoAsync(correoElectronico);
+
+            if (bar == null)
+                return NotFound(new { mensaje = "Bar no encontrado para este correo" });
+
+            // Retornamos todas las propiedades
+            return Ok(new
+            {
+                bar.IdBar,
+                bar.NombreBar,
+                bar.Direccion,
+                bar.Estado
+            });
+        }
+
 
 
     }

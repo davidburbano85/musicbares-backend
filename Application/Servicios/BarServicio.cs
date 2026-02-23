@@ -382,42 +382,35 @@ namespace MusicBares.Application.Servicios
         }
         public async Task<BarListadoDto?> ObtenerPorCorreoAsync(string correoElectronico)
         {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(correoElectronico))
-                    return null;
+            // Buscamos usuario por correo
+            var usuario = await _usuarioRepositorio.ObtenerPorCorreoAsync(correoElectronico);
 
-                // Buscar usuario por correo
-                var usuario = await _usuarioRepositorio.ObtenerPorCorreoAsync(correoElectronico.Trim());
-
-                if (usuario == null)
-                    return null;
-
-                // Validar que el usuario autenticado coincida
-                var idUsuarioActual = await _usuarioActualServicio.ObtenerIdUsuarioAsync();
-
-                if (usuario.IdUsuario != idUsuarioActual)
-                    return null;
-
-                // Obtener el bar (siempre será uno solo)
-                var bar = await _barRepositorio.ObtenerBarPorUsuarioIdAsync(usuario.IdUsuario);
-
-                if (bar == null)
-                    return null;
-
-                return new BarListadoDto
-                {
-                    IdBar = bar.IdBar,
-                    NombreBar = bar.NombreBar,
-                    Direccion = bar.Direccion,
-                    Estado = bar.Estado
-                };
-            }
-            catch
-            {
+            if (usuario == null)
                 return null;
-            }
+
+            // Obtenemos el Id del usuario logueado desde JWT
+            var idUsuarioActual = await _usuarioActualServicio.ObtenerIdUsuarioAsync();
+
+            // Validamos que el correo corresponda al usuario logueado
+            if (usuario.IdUsuario != idUsuarioActual)
+                return null;
+
+            // Obtenemos el bar activo de ese usuario
+            var bar = await _barRepositorio.ObtenerBarPorUsuarioIdAsync(usuario.IdUsuario);
+
+            if (bar == null)
+                return null;
+
+            // Map a DTO
+            return new BarListadoDto
+            {
+                IdBar = bar.IdBar,
+                NombreBar = bar.NombreBar,
+                Direccion = bar.Direccion,
+                Estado = bar.Estado
+            };
         }
+
     }
 }
 
